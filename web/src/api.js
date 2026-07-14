@@ -1,0 +1,64 @@
+// Svi pozivi idu kroz Vite proxy na /api → api servis.
+const BASE = '/api';
+
+async function req(path, opts = {}) {
+  const res = await fetch(BASE + path, {
+    headers: { 'Content-Type': 'application/json' },
+    ...opts,
+    body: opts.body ? JSON.stringify(opts.body) : undefined,
+  });
+  const text = await res.text();
+  const data = text ? JSON.parse(text) : null;
+  if (!res.ok) throw new Error(data?.error || `Greška ${res.status}`);
+  return data;
+}
+
+export const api = {
+  health: () => req('/health'),
+
+  // kategorije
+  categories: (all = false) => req(`/categories${all ? '?all=1' : ''}`),
+  createCategory: (body) => req('/categories', { method: 'POST', body }),
+  updateCategory: (id, body) => req(`/categories/${id}`, { method: 'PUT', body }),
+  deleteCategory: (id) => req(`/categories/${id}`, { method: 'DELETE' }),
+  generate: (id, count = 5) => req(`/categories/${id}/generate`, { method: 'POST', body: { count } }),
+  collect: (id, count = 6) => req(`/collect/${id}`, { method: 'POST', body: { count } }),
+
+  // kartice
+  cards: (params = '') => req(`/cards${params}`),
+  createCard: (body) => req('/cards', { method: 'POST', body }),
+  updateCard: (id, body) => req(`/cards/${id}`, { method: 'PUT', body }),
+  deleteCard: (id) => req(`/cards/${id}`, { method: 'DELETE' }),
+  save: (id) => req(`/cards/${id}/save`, { method: 'POST' }),
+  unsave: (id) => req(`/cards/${id}/save`, { method: 'DELETE' }),
+  seen: (id) => req(`/cards/${id}/seen`, { method: 'POST' }),
+  quizAnswer: (id, correct) => req(`/cards/${id}/quiz-answer`, { method: 'POST', body: { correct } }),
+
+  // feed
+  feed: ({ categories = [], filter = 'all', seed = 'skrol', cursor = 0, limit = 10 }) => {
+    const q = new URLSearchParams({ filter, seed, cursor: String(cursor), limit: String(limit) });
+    if (categories.length) q.set('categories', categories.join(','));
+    return req(`/feed?${q}`);
+  },
+
+  // korisnik
+  state: () => req('/user/state'),
+  visit: () => req('/user/visit', { method: 'POST' }),
+  setFilters: (body) => req('/user/filters', { method: 'PUT', body }),
+
+  // knjige
+  books: () => req('/books'),
+  book: (id) => req(`/books/${id}`),
+  scan: () => req('/books/scan', { method: 'POST', body: {} }),
+  processBook: (id) => req(`/books/${id}/process`, { method: 'POST' }),
+  deleteBook: (id) => req(`/books/${id}`, { method: 'DELETE' }),
+  uploadBook: async (file, meta = {}) => {
+    const fd = new FormData();
+    fd.append('file', file);
+    for (const [k, v] of Object.entries(meta)) if (v) fd.append(k, v);
+    const res = await fetch(`${BASE}/books/upload`, { method: 'POST', body: fd });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.error || 'Upload nije uspeo');
+    return data;
+  },
+};

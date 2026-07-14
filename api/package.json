@@ -1,0 +1,28 @@
+{
+  "name": "skrolopedija-api",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon --legacy-watch --watch src src/index.js",
+    "start": "node src/index.js",
+    "seed": "node scripts/seed.js",
+    "test": "vitest run",
+    "migrate": "prisma migrate deploy"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "@prisma/client": "^5.22.0",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "mammoth": "^1.8.0",
+    "multer": "^2.0.1",
+    "node-cron": "^3.0.3",
+    "pdf-parse": "^1.1.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9",
+    "prisma": "^5.22.0",
+    "supertest": "^7.0.0",
+    "vitest": "^2.1.8"
+  }
+}

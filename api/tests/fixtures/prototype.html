@@ -1,0 +1,22 @@
+<!doctype html>
+<html>
+<head><title>Skrolopedija proto</title></head>
+<body>
+<div id="app"></div>
+<script>
+  // ovo je fiktivni prototip koji oponaša strukturu pravog fajla
+  const CATS = {
+    istorija: { label: "Istorija", color: "#f59e0b", icon: "🏛️" },
+    kosmos: ["Kosmos", "#3b82f6", "🚀"],
+    nauka: "#10b981"
+  };
+  const CARDS = [
+    { cat: "istorija", type: "lesson", title: "Rimski akvedukti", text: "Rimljani su gradili akvedukte da dovedu vodu u gradove. Neki rade i danas." },
+    { cat: "kosmos", title: "Brzina svetlosti", text: "Svetlost putuje oko 300000 km/s. To je granica brzine u svemiru. // ne sme da pukne parser: [{(" },
+    { cat: "nauka", type: "quiz", title: "Kviz: voda", quiz: { q: "Formula vode?", opts: ["H2O", "CO2", "O2", "NaCl"], ok: 0, expl: "Voda je H2O." } },
+    { cat: "istorija", title: "Iz knjige", text: "Primer kartice iz knjige.", book: "Umeće ratovanja" }
+  ];
+  window.__DATA__ = { CATS, CARDS };
+</script>
+</body>
+</html>

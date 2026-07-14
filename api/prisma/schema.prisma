@@ -1,0 +1,88 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Category {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  label     String
+  color     String   @default("#8b5cf6")
+  icon      String   @default("📚")
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  cards     Card[]
+}
+
+model Book {
+  id            Int      @id @default(autoincrement())
+  title         String
+  author        String?
+  language      String?
+  filePath      String
+  fileType      String // pdf | docx
+  fileHash      String   @unique
+  status        String   @default("uploaded") // uploaded | processing | done | failed
+  pageCount     Int?
+  cardCount     Int      @default(0)
+  totalSegments Int      @default(0)
+  doneSegments  Int      @default(0)
+  error         String?
+  createdAt     DateTime @default(now())
+  cards         Card[]
+}
+
+model Card {
+  id         Int          @id @default(autoincrement())
+  categoryId Int
+  category   Category     @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  bookId     Int?
+  book       Book?        @relation(fields: [bookId], references: [id], onDelete: SetNull)
+  type       String       @default("lesson") // lesson | fact | quiz | book
+  title      String
+  text       String
+  quiz       Json? // {q, opts[], ok, expl}
+  source     String       @default("seed") // seed | book | ai | web
+  sourceRef  String?
+  isActive   Boolean      @default(true)
+  createdAt  DateTime     @default(now())
+  saved      SavedCard?
+  seen       SeenCard?
+  answers    QuizAnswer[]
+
+  @@index([categoryId, isActive])
+  @@index([bookId])
+}
+
+model UserState {
+  id          Int       @id @default(1)
+  streakCount Int       @default(0)
+  lastVisit   DateTime?
+  filters     Json?
+}
+
+model SavedCard {
+  cardId    Int      @id
+  card      Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model SeenCard {
+  cardId Int      @id
+  card   Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  seenAt DateTime @default(now())
+}
+
+model QuizAnswer {
+  id         Int      @id @default(autoincrement())
+  cardId     Int
+  card       Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  correct    Boolean
+  answeredAt DateTime @default(now())
+}

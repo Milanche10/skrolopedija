@@ -1,0 +1,26 @@
+# Render Blueprint — API servis (free plan).
+# Baza: Neon (besplatan Postgres) — DATABASE_URL se unosi ručno u Render dashboard-u.
+# AI: Groq free tier (OpenAI-kompatibilan) — OPENAI_API_KEY se unosi ručno.
+services:
+  - type: web
+    name: skrolopedija-api
+    runtime: docker
+    rootDir: api
+    plan: free
+    healthCheckPath: /health
+    dockerCommand: sh -c "npx prisma migrate deploy && (node scripts/seed.js || true) && npm start"
+    envVars:
+      - key: DATABASE_URL
+        sync: false # Neon connection string (sa ?sslmode=require)
+      - key: AI_PROVIDER
+        value: openai
+      - key: OPENAI_BASE_URL
+        value: https://api.groq.com/openai/v1
+      - key: OPENAI_API_KEY
+        sync: false # console.groq.com → API Keys (besplatno)
+      - key: OPENAI_MODEL
+        value: llama-3.1-8b-instant
+      - key: AUTO_PROCESS_ON_STARTUP
+        value: "false"
+      - key: PORT
+        value: "4000"

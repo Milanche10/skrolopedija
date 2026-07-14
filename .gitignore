@@ -1,0 +1,10 @@
+node_modules/
+.env
+dist/
+uploads/
+*.log
+.DS_Store
+
+# Knjige (autorska prava — ne idu u javni repo). Folder se pravi automatski pri docker compose up.
+Baza znanja/
+baza-znanja/

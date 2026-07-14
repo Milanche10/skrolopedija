@@ -1,0 +1,19 @@
+# Netlify — frontend (React/Vite) + proxy ka API-ju na Render-u.
+# Posle deploya na Render, ako se URL servisa razlikuje, ažuriraj "to" ispod.
+[build]
+  base = "web"
+  command = "npm run build"
+  publish = "dist"
+
+# /api/* → Render API (proxy na Netlify edge-u, nema CORS problema)
+[[redirects]]
+  from = "/api/*"
+  to = "https://skrolopedija-api.onrender.com/:splat"
+  status = 200
+  force = true
+
+# SPA fallback — sve ostalo servira index.html (react-router)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

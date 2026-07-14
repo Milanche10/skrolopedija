@@ -1,0 +1,68 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: skrol
+      POSTGRES_PASSWORD: skrol
+      POSTGRES_DB: skrolopedija
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U skrol -d skrolopedija"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  api:
+    build: ./api
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://skrol:skrol@db:5432/skrolopedija
+      AI_PROVIDER: ${AI_PROVIDER:-ollama}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.1:8b}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.groq.com/openai/v1}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-llama-3.1-8b-instant}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      GEN_MODEL: ${GEN_MODEL:-claude-sonnet-4-6}
+      BULK_MODEL: ${BULK_MODEL:-claude-haiku-4-5}
+      KNOWLEDGE_DIR: /app/baza-znanja
+      UPLOAD_DIR: /app/uploads
+      PROTOTYPE_HTML: /app/project/skrolopedija.html
+      AUTO_PROCESS_ON_STARTUP: ${AUTO_PROCESS_ON_STARTUP:-false}
+      DAILY_COLLECT_CRON: ${DAILY_COLLECT_CRON:-}
+      PORT: 4000
+    ports:
+      - "4000:4000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./api/src:/app/src
+      - ./api/scripts:/app/scripts
+      - ./api/seed-data:/app/seed-data
+      - ./api/prisma:/app/prisma
+      - uploads:/app/uploads
+      - "./Baza znanja:/app/baza-znanja"
+      - ".:/app/project:ro"
+
+  web:
+    build: ./web
+    depends_on:
+      - api
+    environment:
+      VITE_API_PROXY: http://api:4000
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./web/src:/app/src
+      - ./web/index.html:/app/index.html
+      - ./web/vite.config.js:/app/vite.config.js
+
+volumes:
+  pgdata:
+  uploads:
