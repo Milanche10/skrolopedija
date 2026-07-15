@@ -5,13 +5,15 @@ services:
   - type: web
     name: skrolopedija-api
     runtime: docker
-    rootDir: api
     plan: free
     healthCheckPath: /health
+    # Dockerfile je u api/ folderu — obe putanje su relativne od korena repo-a
+    dockerfilePath: ./api/Dockerfile
+    dockerContext: ./api
     dockerCommand: sh -c "npx prisma migrate deploy && (node scripts/seed.js || true) && npm start"
     envVars:
       - key: DATABASE_URL
-        sync: false # Neon connection string (sa ?sslmode=require)
+        sync: false # Neon connection string (direktan, sa ?sslmode=require)
       - key: AI_PROVIDER
         value: openai
       - key: OPENAI_BASE_URL

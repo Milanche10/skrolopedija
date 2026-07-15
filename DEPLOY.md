@@ -39,11 +39,25 @@ gh repo create skrolopedija --public --source . --push
 1. https://render.com → Sign up (GitHub nalog) → **New → Blueprint** → izaberi repo `skrolopedija`.
    Render pročita `render.yaml` i ponudi servis `skrolopedija-api`.
 2. Kad zatraži env promenljive:
-   - `DATABASE_URL` = Neon connection string (korak 1)
+   - `DATABASE_URL` = Neon connection string (korak 1) — **direktan** (bez `-pooler` u hostu)
    - `OPENAI_API_KEY` = Groq ključ (korak 2)
 3. Deploy. Kad se završi, proveri: `https://skrolopedija-api.onrender.com/health`
    → treba `{"ok":true,"aiReady":true,...}`. Migracije i seed idu automatski pri startu.
 4. Ako je Render dodelio drugačiji URL, upiši ga u `netlify.toml` (redirect `to`) i push-uj.
+
+**Ako si servis napravio ručno** (New → Web Service, bez Blueprint-a), Dockerfile nije u korenu
+repo-a pa build pada sa „open Dockerfile: no such file or directory". U **Settings → Build & Deploy** podesi:
+
+| Polje | Vrednost |
+|---|---|
+| Dockerfile Path | `./api/Dockerfile` |
+| Docker Build Context Directory | `./api` |
+| Docker Command | `sh -c "npx prisma migrate deploy && (node scripts/seed.js || true) && npm start"` |
+| Health Check Path | `/health` |
+
+i u **Environment** dodaj: `DATABASE_URL`, `AI_PROVIDER=openai`,
+`OPENAI_BASE_URL=https://api.groq.com/openai/v1`, `OPENAI_API_KEY`,
+`OPENAI_MODEL=llama-3.1-8b-instant`, `AUTO_PROCESS_ON_STARTUP=false` → **Manual Deploy → Deploy latest commit**.
 
 ## 4. Netlify — frontend + domen (5 min)
 
@@ -61,6 +75,28 @@ gh repo create skrolopedija --public --source . --push
 - `https://digitalnizenit.org` → feed radi (kartice iz Neon baze).
 - `https://digitalnizenit.org/admin` → admin; AI status treba da bude `openai · llama-3.1-8b-instant ✅`.
 - „✨ AI +5" na kategoriji → nove kartice preko Groq-a.
+
+## Knjige u produkciji — obradi lokalno, kartice idu u Neon
+
+Knjige (PDF/DOCX) ne šalju se na server: fajlovi su pod autorskim pravima, Render free nema
+trajni disk, a Groq bi obradu naplaćivao kroz limite. Umesto toga, **obrada ide lokalno
+(besplatna Ollama), a kartice se upisuju direktno u produkcijsku bazu**:
+
+```bash
+# 1. ubaci knjige u folder "Baza znanja/"
+# 2. pokreni jednokratnu obradu uperenu u Neon (zameni connection string svojim):
+docker compose run --rm \
+  -e DATABASE_URL="postgresql://neondb_owner:...@ep-....neon.tech/neondb?sslmode=require" \
+  api sh -c "npx prisma migrate deploy && node scripts/processBooks.js"
+```
+
+Skripta skenira folder, registruje nove fajlove (dedup po hash-u — već obrađene preskače),
+obradi ih redom kroz Ollamu (segment po segment, sa progresom u konzoli) i upiše kartice u
+Neon. Čim se završi, kartice su vidljive na sajtu. Za ponovnu obradu jedne knjige:
+`... node scripts/processBooks.js <bookId>`.
+
+Alternativa: upload kroz admin na sajtu — radi (obrada ide kroz Groq), fajl je efemeran ali
+IZVUČENE KARTICE ostaju trajno u bazi.
 
 ## Lokalno vs. produkcija
 
