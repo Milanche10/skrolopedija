@@ -46,6 +46,7 @@ services:
       - ./api/scripts:/app/scripts
       - ./api/seed-data:/app/seed-data
       - ./api/prisma:/app/prisma
+      - ./api/tests:/app/tests
       - uploads:/app/uploads
       - "./Baza znanja:/app/baza-znanja"
       - ".:/app/project:ro"

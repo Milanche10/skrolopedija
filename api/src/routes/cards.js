@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { Prisma } from '@prisma/client';
 import { prisma } from '../lib/prisma.js';
 import { HttpError, asyncHandler, requireFields, intParam } from '../lib/errors.js';
 
@@ -106,18 +107,28 @@ router.put(
     if (req.body.type && !TYPES.includes(req.body.type)) {
       throw new HttpError(400, `type mora biti: ${TYPES.join(', ')}`);
     }
-    if (req.body.quiz) validateQuiz(req.body.quiz);
+    if (req.body.quiz !== undefined && req.body.quiz !== null) validateQuiz(req.body.quiz);
+
+    const existing = await prisma.card.findUnique({ where: { id } });
+    if (!existing) throw new HttpError(404, 'Kartica ne postoji');
+
+    // kartica koja POSLE izmene ima type=quiz mora imati i validan quiz
+    const finalType = req.body.type ?? existing.type;
+    const finalQuiz = req.body.quiz === undefined ? existing.quiz : req.body.quiz;
+    if (finalType === 'quiz' && !finalQuiz) {
+      throw new HttpError(400, 'Kviz kartica mora imati quiz polje ({q, opts[], ok, expl})');
+    }
+
     const data = {};
-    for (const f of ['categoryId', 'bookId', 'type', 'title', 'text', 'quiz', 'source', 'sourceRef', 'isActive']) {
+    for (const f of ['categoryId', 'bookId', 'type', 'title', 'text', 'source', 'sourceRef', 'isActive']) {
       if (req.body[f] !== undefined) data[f] = req.body[f];
     }
-    try {
-      const card = await prisma.card.update({ where: { id }, data });
-      res.json(card);
-    } catch (err) {
-      if (err.code === 'P2025') throw new HttpError(404, 'Kartica ne postoji');
-      throw err;
+    if (req.body.quiz !== undefined) {
+      // goli null nije dozvoljen za Prisma Json polje — mora DbNull
+      data.quiz = req.body.quiz === null ? Prisma.DbNull : req.body.quiz;
     }
+    const card = await prisma.card.update({ where: { id }, data });
+    res.json(card);
   })
 );
 

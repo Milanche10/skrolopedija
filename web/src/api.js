@@ -35,9 +35,10 @@ export const api = {
   quizAnswer: (id, correct) => req(`/cards/${id}/quiz-answer`, { method: 'POST', body: { correct } }),
 
   // feed
-  feed: ({ categories = [], filter = 'all', seed = 'skrol', cursor = 0, limit = 10 }) => {
+  feed: ({ categories = [], filter = 'all', seed = 'skrol', cursor = '0-0', limit = 10, since = '' }) => {
     const q = new URLSearchParams({ filter, seed, cursor: String(cursor), limit: String(limit) });
     if (categories.length) q.set('categories', categories.join(','));
+    if (since) q.set('since', since);
     return req(`/feed?${q}`);
   },
 

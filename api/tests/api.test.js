@@ -86,11 +86,48 @@ d('API', () => {
     expect(unsave.body.saved).toBe(false);
   });
 
-  it('feed vraća stranice sa nextCursor', async () => {
+  it('feed vraća stranice sa kompozitnim nextCursor', async () => {
     const res = await request(app).get(`/feed?categories=${created.catId}&limit=5`);
     expect(res.status).toBe(200);
     expect(Array.isArray(res.body.items)).toBe(true);
-    expect(typeof res.body.nextCursor).toBe('number');
+    expect(String(res.body.nextCursor)).toMatch(/^\d+-\d+$/);
+  });
+
+  it('feed ne duplira kartice kroz stranice kad nema kvizova', async () => {
+    // 12 običnih kartica, bez ijednog kviza — pozicija 9 se popunjava običnom
+    for (let i = 0; i < 12; i++) {
+      await request(app)
+        .post('/cards')
+        .send({ categoryId: created.catId, type: 'lesson', title: `Pag ${i}`, text: 'T.' });
+    }
+    const seed = 'pagetest';
+    const p1 = await request(app).get(`/feed?categories=${created.catId}&limit=9&seed=${seed}`);
+    const p2 = await request(app).get(
+      `/feed?categories=${created.catId}&limit=9&seed=${seed}&cursor=${p1.body.nextCursor}`
+    );
+    const ids1 = p1.body.items.map((c) => c.id);
+    const ids2 = p2.body.items.map((c) => c.id);
+    expect(ids1.length).toBe(9);
+    // nijedan id sa prve strane ne sme da se ponovi na drugoj
+    expect(ids2.filter((id) => ids1.includes(id))).toEqual([]);
+  });
+
+  it('PUT ne dozvoljava type=quiz bez quiz polja, a quiz:null vraća 400 (ne 500)', async () => {
+    const noQuiz = await request(app).put(`/cards/${created.cardId}`).send({ type: 'quiz' });
+    expect(noQuiz.status).toBe(400);
+    const quizCard = await request(app)
+      .post('/cards')
+      .send({
+        categoryId: created.catId,
+        type: 'quiz',
+        title: 'Kviz za null test',
+        quiz: { q: 'P?', opts: ['A', 'B'], ok: 0, expl: 'E.' },
+      });
+    const nullQuiz = await request(app).put(`/cards/${quizCard.body.id}`).send({ quiz: null });
+    expect(nullQuiz.status).toBe(400);
+    // ali skidanje kviza uz promenu tipa je dozvoljeno
+    const demote = await request(app).put(`/cards/${quizCard.body.id}`).send({ type: 'lesson', quiz: null });
+    expect(demote.status).toBe(200);
   });
 
   it('streak (visit) vraća count', async () => {

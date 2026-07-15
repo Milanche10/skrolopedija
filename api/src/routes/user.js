@@ -10,8 +10,18 @@ async function getState() {
   return state;
 }
 
+// Dan se računa u vremenskoj zoni korisnika (ne UTC servera) — inače se streak
+// pogrešno resetuje/uvećava oko lokalne ponoći kad server radi u UTC (Render).
+const TZ = process.env.APP_TIMEZONE || 'Europe/Belgrade';
+const dayFmt = new Intl.DateTimeFormat('sv-SE', {
+  timeZone: TZ,
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+});
+
 function dayString(d) {
-  return d.toISOString().slice(0, 10);
+  return dayFmt.format(d); // YYYY-MM-DD u zoni TZ
 }
 
 router.get(

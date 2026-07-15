@@ -21,7 +21,8 @@ export default function App() {
   const [toast, setToast] = useState(null);
   const [pullHint, setPullHint] = useState(false);
 
-  const cursor = useRef(0);
+  const cursor = useRef('0-0');
+  const sessionStart = useRef(new Date().toISOString());
   const hasMore = useRef(true);
   const loadingMore = useRef(false);
   const feedRef = useRef(null);
@@ -59,8 +60,9 @@ export default function App() {
           categories: useFilters.categories,
           filter: useFilters.filter,
           seed: useSeed,
-          cursor: reset ? 0 : cursor.current,
+          cursor: reset ? '0-0' : cursor.current,
           limit: LIMIT,
+          since: sessionStart.current,
         });
         cursor.current = res.nextCursor;
         hasMore.current = res.hasMore;
@@ -77,7 +79,8 @@ export default function App() {
 
   // (ponovo) učitaj feed kad se promene filteri ili seed
   useEffect(() => {
-    cursor.current = 0;
+    cursor.current = '0-0';
+    sessionStart.current = new Date().toISOString();
     hasMore.current = true;
     if (feedRef.current) feedRef.current.scrollTop = 0;
     loadFeed(true, seed, filters);
