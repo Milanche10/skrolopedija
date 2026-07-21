@@ -19,6 +19,8 @@ const OLLAMA_TIMEOUT_MS = Number(process.env.OLLAMA_TIMEOUT_MS) || 900000; // 15
 // --- OpenAI-kompatibilan API (Groq free tier je podrazumevani cilj) ---
 const OPENAI_BASE = (process.env.OPENAI_BASE_URL || 'https://api.groq.com/openai/v1').replace(/\/$/, '');
 const OPENAI_MODEL = process.env.OPENAI_MODEL || 'llama-3.1-8b-instant';
+// Groq free tier ima nizak TPM (6000). Ograniči izlaz da zahtev (ulaz+izlaz) stane u limit.
+const OPENAI_MAX_TOKENS = Number(process.env.OPENAI_MAX_TOKENS) || 2000;
 
 // --- Anthropic podešavanja ---
 const ANTHROPIC_GEN = process.env.GEN_MODEL || 'claude-sonnet-4-6';
@@ -42,6 +44,16 @@ export function hasAI() {
 
 export function providerName() {
   return PROVIDER;
+}
+
+/**
+ * Preporučena veličina segmenta knjige (znakova) za trenutnog provajdera.
+ * Groq free (nizak TPM) traži manje segmente da zahtev stane u limit; ostali mogu veće.
+ */
+export function chunkCharsForProvider() {
+  if (process.env.CHUNK_CHARS) return Number(process.env.CHUNK_CHARS);
+  if (PROVIDER === 'openai') return 6000; // ~1500 tok ulaz + 2000 izlaz < 6000 TPM
+  return 16000;
 }
 
 /** Provera da li AI zaista odgovara (koristi /health i admin). */
@@ -117,7 +129,7 @@ async function callOpenAI({ system, user, model, maxTokens, retries, json }) {
         },
         body: JSON.stringify({
           model,
-          max_tokens: maxTokens,
+          max_tokens: Math.min(maxTokens, OPENAI_MAX_TOKENS),
           temperature: 0.7,
           response_format: json ? { type: 'json_object' } : undefined,
           messages: [

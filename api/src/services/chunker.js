@@ -1,16 +1,18 @@
 /**
- * Podela teksta knjige na segmente od ~3000–5000 tokena (~12–20k znakova)
- * sa preklapanjem, uz praćenje raspona strana za svaki segment.
+ * Podela teksta knjige na segmente sa preklapanjem, uz praćenje raspona strana.
+ * Veličina segmenta je podesiva (manja za provajdere sa niskim TPM limitom, npr. Groq free).
  */
-const TARGET_CHARS = 16000; // ~4000 tokena
-const MAX_CHARS = 20000;
+const DEFAULT_TARGET_CHARS = 16000; // ~4000 tokena
 const OVERLAP_CHARS = 800;
 
 /**
  * @param {string[]} pages tekst po stranama (1 element ako strane nisu poznate)
+ * @param {number} [targetChars] ciljna veličina segmenta u znakovima
  * @returns {{text: string, startPage: number|null, endPage: number|null}[]}
  */
-export function chunkPages(pages) {
+export function chunkPages(pages, targetChars = DEFAULT_TARGET_CHARS) {
+  const TARGET_CHARS = Math.max(1000, targetChars);
+  const MAX_CHARS = Math.round(TARGET_CHARS * 1.25);
   // spoji strane i zapamti gde koja počinje
   const offsets = []; // offsets[i] = početni offset strane i+1
   let full = '';

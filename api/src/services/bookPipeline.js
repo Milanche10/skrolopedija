@@ -5,6 +5,7 @@ import { chunkPages } from './chunker.js';
 import { segmentToCards, quizFromLessons } from './cardGen.js';
 import { isDuplicateTitle } from './dedup.js';
 import { enqueueBookJob } from './jobs.js';
+import { chunkCharsForProvider } from '../lib/llm.js';
 
 const QUIZ_EVERY = 10; // otprilike svakih 10 lekcija jedan kviz
 
@@ -39,7 +40,7 @@ export async function processBook(bookId) {
         'Fajl nema tekstualni sloj (verovatno skenirane slike) — potreban je OCR pre obrade. Provuci PDF kroz OCR alat pa ga ponovo dodaj.'
       );
     }
-    const chunks = chunkPages(pages);
+    const chunks = chunkPages(pages, chunkCharsForProvider());
     if (!chunks.length) throw new Error('Iz fajla nije izvučen upotrebljiv tekst.');
 
     await prisma.book.update({

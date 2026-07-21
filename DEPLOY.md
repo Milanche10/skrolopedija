@@ -99,6 +99,11 @@ docker compose run --rm \
 **Alternativa — potpuno lokalno (Ollama):** izostavi `AI_PROVIDER`/`OPENAI_API_KEY` i tekst
 nikad ne napušta računar. Sporo, ali radi; za velike knjige podesi `-e OLLAMA_TIMEOUT_MS=1800000`.
 
+> Groq free tier ima 6000 tokena/min: pipeline zato za `AI_PROVIDER=openai` automatski koristi
+> manje segmente (~6000 znakova) i ograničava izlaz (`OPENAI_MAX_TOKENS`, default 2000). Povremeni
+> `429` u logu su normalni (throttle) — retry/backoff ih preživi. Velike knjige idu sporije zbog
+> limita; ako iscrpiš dnevnu kvotu, nedovršene knjige ostanu `failed` i nastaviš sutra istom komandom.
+
 Skripta skenira folder, registruje nove fajlove (dedup po hash-u — već obrađene preskače),
 obradi ih redom (segment po segment, sa progresom u konzoli) i upiše kartice u Neon. Čim se
 završi, kartice su vidljive na sajtu. Opcije: `... processBooks.js scan` (samo lista),
