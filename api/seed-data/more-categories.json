@@ -1,0 +1,19 @@
+{
+  "_comment": "Kategorije bez seed kartica — feed ih automatski puni AI generisanjem. Dodaj još slobodno.",
+  "categories": [
+    { "key": "biznis", "label": "Biznis", "color": "#0ea5e9", "icon": "💼", "sortOrder": 30, "cards": [] },
+    { "key": "marketing", "label": "Marketing", "color": "#f43f5e", "icon": "📣", "sortOrder": 31, "cards": [] },
+    { "key": "programiranje", "label": "Programiranje", "color": "#22c55e", "icon": "💻", "sortOrder": 32, "cards": [] },
+    { "key": "vestacka-inteligencija", "label": "Veštačka inteligencija", "color": "#8b5cf6", "icon": "🤖", "sortOrder": 33, "cards": [] },
+    { "key": "ekonomija", "label": "Ekonomija", "color": "#eab308", "icon": "📊", "sortOrder": 34, "cards": [] },
+    { "key": "finansije", "label": "Finansije", "color": "#10b981", "icon": "💰", "sortOrder": 35, "cards": [] },
+    { "key": "psihologija", "label": "Psihologija", "color": "#14b8a6", "icon": "🧠", "sortOrder": 36, "cards": [] },
+    { "key": "filozofija", "label": "Filozofija", "color": "#a855f7", "icon": "🤔", "sortOrder": 37, "cards": [] },
+    { "key": "istorija", "label": "Istorija", "color": "#f59e0b", "icon": "🏛️", "sortOrder": 38, "cards": [] },
+    { "key": "nauka", "label": "Nauka", "color": "#3b82f6", "icon": "🔬", "sortOrder": 39, "cards": [] },
+    { "key": "kosmos", "label": "Kosmos", "color": "#6366f1", "icon": "🚀", "sortOrder": 40, "cards": [] },
+    { "key": "umetnost", "label": "Umetnost", "color": "#ec4899", "icon": "🎨", "sortOrder": 41, "cards": [] },
+    { "key": "zdravlje", "label": "Zdravlje i ishrana", "color": "#ef4444", "icon": "🩺", "sortOrder": 42, "cards": [] },
+    { "key": "produktivnost", "label": "Produktivnost", "color": "#f97316", "icon": "⚡", "sortOrder": 43, "cards": [] }
+  ]
+}
