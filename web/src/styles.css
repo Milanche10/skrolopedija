@@ -176,6 +176,25 @@ button {
   gap: 6px;
   max-width: 60vw;
 }
+.deeper-btn {
+  align-self: flex-start;
+  margin-top: 22px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+  transition: transform var(--t-fast) var(--ease-out), background var(--t-fast) var(--ease-out);
+}
+.deeper-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+.deeper-btn:active {
+  transform: scale(0.96);
+}
 
 /* ---------- ACTION RAIL ---------- */
 .rail {

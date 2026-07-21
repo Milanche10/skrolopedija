@@ -55,6 +55,9 @@ export const api = {
   saveNew: (card) => req('/cards/save-new', { method: 'POST', body: card }),
   // AI objašnjenje: mode = eli10 | example | deeper
   explain: ({ title, text, mode }) => req('/cards/explain', { method: 'POST', body: { title, text, mode } }),
+  // „Saznaj više" — dublje kartice o temi date kartice (rabbit hole)
+  deeper: ({ title, text, categoryId, category }) =>
+    req('/feed/deeper', { method: 'POST', body: { title, text, categoryId, category } }),
   seen: (id) => req(`/cards/${id}/seen`, { method: 'POST' }),
   quizAnswer: (id, correct) => req(`/cards/${id}/quiz-answer`, { method: 'POST', body: { correct } }),
   // adaptivni signal: kind = know | dont_know | skip

@@ -160,6 +160,21 @@ ${lessons.map((l) => `- ${l.title}: ${l.text}`).join('\n')}`;
 }
 
 /**
+ * „Saznaj više" — razloži temu kartice na dublje, konkretnije podteme (rabbit hole).
+ */
+export async function generateDeeperCards({ title, text, categoryLabel, existingTitles = [], count = 4 }) {
+  const system = `Ti si vodič kroz „rabbit hole" učenje za Skrolopediju. ${CARD_RULES}
+- Korisnik želi da uđe DUBLJE u konkretnu temu kartice — napravi ${count} kartica koje su sledeći, dublji korak (podteme, detalji, uzroci, posledice, primeri), a NE opšte činjenice o oblasti.
+- Idi od šire ka užoj temi; svaka kartica otkriva nešto novo i konkretno vezano baš za ovu temu.`;
+  const user = `Oblast: "${categoryLabel}". Polazna kartica:\nNaslov: ${title}\nTekst: ${text}\n
+Napravi ${count} dubljih kartica direktno vezanih za OVU temu (ne za celu oblast).
+Izbegavaj naslove: ${existingTitles.slice(0, 40).join('; ') || '(nema)'}
+Vrati JSON: {"cards": [ {"title","text","type"} ]}.`;
+  const raw = await callLLM({ system, user, maxTokens: 3000 });
+  return cleanCards(asCardArray(extractJson(raw)));
+}
+
+/**
  * Objasni karticu drugačije: jednostavno („kao detetu") ili kroz primer iz života.
  */
 export async function explainCard({ title, text, mode = 'eli10' }) {

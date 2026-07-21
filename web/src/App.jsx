@@ -257,6 +257,25 @@ export default function App() {
     api.quizAnswer(id, correct).then(checkLevelUp).catch(() => {});
   }
 
+  // „Saznaj više" → ubaci dublje kartice odmah iza trenutne
+  async function openDeeper(card) {
+    showToast('Kopam dublje… 🔎', 1500);
+    try {
+      const res = await api.deeper({ title: card.title, text: card.text, categoryId: catIdOf(card), category: card.category });
+      if (!res.items?.length) return showToast('Nema dubljih kartica trenutno', 2500);
+      setItems((prev) => {
+        const i = prev.findIndex((c) => c.id === card.id);
+        if (i < 0) return prev;
+        const next = [...prev];
+        next.splice(i + 1, 0, ...res.items);
+        return next;
+      });
+      showToast('Dodato ispod ↓ ' + res.items.length + ' dubljih kartica');
+    } catch (e) {
+      showToast('Nije uspelo: ' + e.message, 3000);
+    }
+  }
+
   function toggleStory(catId) {
     setFilters((f) => {
       const single = f.categories.length === 1 && f.categories[0] === catId;
@@ -343,6 +362,7 @@ export default function App() {
               onUnsave={unsave}
               onQuizAnswer={onQuizAnswer}
               onSignal={(kind) => sendSignal(card, kind)}
+              onDeeper={() => openDeeper(card)}
               onToast={showToast}
             />
           ))}

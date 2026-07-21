@@ -3,8 +3,56 @@ import { Prisma } from '@prisma/client';
 import { prisma } from '../lib/prisma.js';
 import { asyncHandler, HttpError } from '../lib/errors.js';
 import { generateFreshCards } from '../services/freshFeed.js';
+import { generateDeeperCards } from '../services/cardGen.js';
+import { hasAI } from '../lib/llm.js';
 
 const router = Router();
+
+let deeperCounter = 0;
+
+/**
+ * POST /feed/deeper { cardId?, title, text, categoryId, count }
+ * „Saznaj više" — dublje efemerne kartice o konkretnoj temi date kartice.
+ */
+router.post(
+  '/deeper',
+  asyncHandler(async (req, res) => {
+    if (!hasAI()) return res.json({ items: [] });
+    if (!req.body?.title || !req.body?.text) throw new HttpError(400, 'title i text su obavezni');
+    const categoryId = Number(req.body.categoryId) || null;
+    const cat = categoryId ? await prisma.category.findUnique({ where: { id: categoryId } }) : null;
+    const count = Math.min(Math.max(Number(req.body?.count) || 4, 1), 6);
+    let cards;
+    try {
+      cards = await generateDeeperCards({
+        title: String(req.body.title),
+        text: String(req.body.text),
+        categoryLabel: cat?.label || 'opšte',
+        count,
+      });
+    } catch (err) {
+      console.warn('Deeper generisanje nije uspelo:', err.message);
+      return res.json({ items: [] });
+    }
+    const items = cards.map((c) => ({
+      id: `gen_deep_${Date.now()}_${deeperCounter++}`,
+      type: c.type,
+      title: c.title,
+      text: c.text,
+      quiz: null,
+      source: 'ai',
+      sourceRef: null,
+      ephemeral: true,
+      deeper: true,
+      categoryId: cat?.id ?? null,
+      category: cat ? { id: cat.id, key: cat.key, label: cat.label, color: cat.color, icon: cat.icon } : req.body.category || null,
+      book: null,
+      saved: false,
+      seen: false,
+    }));
+    res.json({ items });
+  })
+);
 
 /**
  * POST /feed/fresh { categories:[ids], count, avoid:[titles] }

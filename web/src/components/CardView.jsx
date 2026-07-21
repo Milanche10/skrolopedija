@@ -6,7 +6,7 @@ import QuizCard from './QuizCard.jsx';
 
 const SWIPE_THRESHOLD = 90;
 
-export default function CardView({ card, saved, onSave, onUnsave, onQuizAnswer, onSignal, onToast }) {
+export default function CardView({ card, saved, onSave, onUnsave, onQuizAnswer, onSignal, onDeeper, onToast }) {
   const [burst, setBurst] = useState(false);
   const [dragX, setDragX] = useState(0);
   const [dragging, setDragging] = useState(false);
@@ -116,6 +116,11 @@ export default function CardView({ card, saved, onSave, onUnsave, onQuizAnswer, 
               {card.book ? `📖 ${card.book.title}` : card.source === 'web' ? '🌐 Wikipedia' : ''}
               {card.sourceRef ? ` · ${card.sourceRef}` : ''}
             </div>
+          )}
+          {onDeeper && (
+            <button className="deeper-btn" onClick={(e) => { e.stopPropagation(); onDeeper(); }}>
+              Saznaj više →
+            </button>
           )}
         </>
       )}
