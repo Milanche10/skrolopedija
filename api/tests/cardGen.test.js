@@ -17,18 +17,37 @@ describe('asCardArray — toleriše različite oblike odgovora modela', () => {
   });
 });
 
-describe('cleanCards — mapira srpska imena polja na title/text', () => {
+describe('cleanCards — mapira srpska imena polja + filter kvaliteta', () => {
+  const dobarTekst =
+    'Degustacija vina počinje pogledom na boju i bistrinu, zatim se procenjuje aroma, pa tek onda ukus i završnica. Svaki korak otkriva drugu osobinu vina i traži malo strpljenja.';
+
   it('mapira naslov/tekst i podrazumeva type=lesson', () => {
-    const out = cleanCards([{ naslov: 'Vino', tekst: 'Opis vina.' }]);
-    expect(out).toEqual([{ title: 'Vino', text: 'Opis vina.', type: 'lesson' }]);
+    const out = cleanCards([{ naslov: 'Kako se degustira vino', tekst: dobarTekst }]);
+    expect(out).toEqual([{ title: 'Kako se degustira vino', text: dobarTekst, type: 'lesson' }]);
   });
-  it('poštuje type=fact i odbacuje kartice bez naslova ili teksta', () => {
+
+  it('poštuje type=fact', () => {
+    const out = cleanCards([{ title: 'Zašto je more slano', text: dobarTekst, type: 'fact' }]);
+    expect(out[0].type).toBe('fact');
+  });
+
+  it('odbacuje kratke, prazne i generičke kartice', () => {
     const out = cleanCards([
-      { title: 'Cinjenica', text: 'X', type: 'fact' },
+      { title: 'Dobra', text: dobarTekst }, // ok
+      { title: 'Prekratko', text: 'Samo par reči.' }, // < 120 znakova
       { title: 'Bez teksta' },
-      { text: 'bez naslova' },
+      { text: 'bez naslova, ali dovoljno dug tekst koji ipak nema naslov pa se odbacuje bez obzira na dužinu ovoga.' },
+      { title: 'Lekcija 1', text: dobarTekst }, // generički naslov
     ]);
-    expect(out).toEqual([{ title: 'Cinjenica', text: 'X', type: 'fact' }]);
+    expect(out.map((c) => c.title)).toEqual(['Dobra']);
+  });
+
+  it('uklanja duplikate naslova unutar iste serije', () => {
+    const out = cleanCards([
+      { title: 'Ista tema', text: dobarTekst },
+      { title: 'ISTA  tema', text: dobarTekst },
+    ]);
+    expect(out).toHaveLength(1);
   });
 });
 

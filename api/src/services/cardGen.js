@@ -1,12 +1,14 @@
 import { callLLM, extractJson, GEN_MODEL } from '../lib/llm.js';
 
 const CARD_RULES = `Pravila za kartice:
-- Sav tekst na srpskom jeziku, LATINICA (ekavica).
-- "title": kratak, upečatljiv naslov (do 60 znakova).
-- "text": 3–5 rečenica, jasno, zanimljivo, edukativno — kao mini-lekcija koju čitalac pamti.
+- Sav tekst na srpskom jeziku, LATINICA (ekavica), gramatički ispravno i prirodno.
+- "title": kratak, konkretan naslov (do 60 znakova), bez uopštenih fraza tipa "Zanimljivost" ili "Lekcija 1".
+- "text": 3–5 punih rečenica (najmanje 200 znakova), jasno i samostalno razumljivo — čitalac pamti jednu konkretnu ideju.
 - "type": tačno "lesson" (lekcija/tehnika/princip) ili "fact" (zanimljiva činjenica).
+- KVALITET IZNAD KOLIČINE: napravi karticu SAMO ako nosi zaokruženu, vrednu ideju. Radije vrati manje kartica nego prazne/uopštene.
+- Preskoči sve što nije samo po sebi lekcija: sadržaj, predgovor, posvete, zahvalnice, imena poglavlja, nabrajanja bez objašnjenja, „autor kaže…" bez suštine.
 - Nikad ne kopiraj tekst izvora — uvek parafraziraj svojim rečima.
-- Piši samo činjenično tačne stvari; ako nisi siguran u podatak, izostavi ga. Ne izmišljaj brojeve i imena.
+- Samo činjenično tačno; ako nisi siguran u podatak, izostavi ga. Ne izmišljaj brojeve, imena ni citate.
 - Vrati ISKLJUČIVO JSON objekat oblika: {"cards": [ {"title": "...", "text": "...", "type": "lesson"}, ... ]}. Bez teksta pre ili posle.`;
 
 const QUIZ_RULES = `Kviz kartica je JSON objekat: {"title": "...", "quiz": {"q": "pitanje", "opts": ["A","B","C","D"], "ok": <indeks tačnog 0-3>, "expl": "objašnjenje u 1-2 rečenice"}}. Sve na srpskom, latinica.`;
@@ -36,15 +38,29 @@ export function asCardArray(parsed) {
   return [];
 }
 
+// Naslovi koji su prazna forma, ne prava lekcija — odbaci ih.
+const GENERIC_TITLE = /^(lekcija|kartica|zanimljivost|fact|lesson|uvod|zaključak|poglavlje|deo)\s*\d*[:.\s]*$/i;
+
 export function cleanCards(arr) {
+  const seen = new Set();
   return arr
     .map((c) => ({
-      title: pick(c, 'title', 'naslov', 'naziv'),
-      text: pick(c, 'text', 'tekst', 'sadrzaj', 'sadržaj', 'opis'),
+      title: String(pick(c, 'title', 'naslov', 'naziv') || '').trim(),
+      text: String(pick(c, 'text', 'tekst', 'sadrzaj', 'sadržaj', 'opis') || '').trim(),
       type: pick(c, 'type', 'tip') === 'fact' ? 'fact' : 'lesson',
     }))
-    .filter((c) => c.title && c.text)
-    .map((c) => ({ title: String(c.title), text: String(c.text), type: c.type }));
+    .filter((c) => {
+      // filter kvaliteta: samo kartice koje "imaju smisla"
+      if (!c.title || !c.text) return false;
+      if (c.title.length < 3 || c.title.length > 120) return false;
+      if (c.text.length < 120) return false; // prekratko = nije zaokružena lekcija
+      if (GENERIC_TITLE.test(c.title)) return false;
+      if (!/[.!?]/.test(c.text)) return false; // nema nijedne cele rečenice
+      const key = c.title.toLowerCase().replace(/\s+/g, ' ');
+      if (seen.has(key)) return false; // duplikat unutar iste serije
+      seen.add(key);
+      return true;
+    });
 }
 
 // Normalizuj kviz iz modela (toleriše srpska imena polja).

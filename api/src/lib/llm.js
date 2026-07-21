@@ -18,7 +18,8 @@ const OLLAMA_TIMEOUT_MS = Number(process.env.OLLAMA_TIMEOUT_MS) || 900000; // 15
 
 // --- OpenAI-kompatibilan API (Groq free tier je podrazumevani cilj) ---
 const OPENAI_BASE = (process.env.OPENAI_BASE_URL || 'https://api.groq.com/openai/v1').replace(/\/$/, '');
-const OPENAI_MODEL = process.env.OPENAI_MODEL || 'llama-3.1-8b-instant';
+// 70b daje bitno bolji srpski i rasuđivanje od 8b (i dalje besplatan na Groq-u).
+const OPENAI_MODEL = process.env.OPENAI_MODEL || 'llama-3.3-70b-versatile';
 // Groq free tier ima nizak TPM (6000). Ograniči izlaz da zahtev (ulaz+izlaz) stane u limit.
 const OPENAI_MAX_TOKENS = Number(process.env.OPENAI_MAX_TOKENS) || 2000;
 

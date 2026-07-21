@@ -22,11 +22,24 @@ function titleFromFilename(name) {
  * @param {boolean} autoProcess odmah pokreni obradu novih knjiga
  */
 export async function scanKnowledgeDir(autoProcess = true) {
+  // Osiguraj da folder postoji (na Renderu ga nema pri startu → inače ENOENT).
+  await fs.mkdir(KNOWLEDGE_DIR, { recursive: true }).catch(() => {});
   let entries;
   try {
     entries = await fs.readdir(KNOWLEDGE_DIR);
-  } catch {
-    return { scanned: 0, added: [], existing: 0, error: `Folder ${KNOWLEDGE_DIR} nije dostupan` };
+  } catch (err) {
+    return { scanned: 0, added: [], existing: 0, error: `Folder ${KNOWLEDGE_DIR} nije dostupan: ${err.code || err.message}` };
+  }
+  if (entries.length === 0) {
+    return {
+      scanned: 0,
+      added: [],
+      existing: 0,
+      error:
+        'Folder baze znanja je prazan (na hostingu nema tvojih lokalnih fajlova). ' +
+        'Knjige dodaj preko dugmeta „Upload", ili ih obradi lokalno u Neon bazu ' +
+        '(vidi DEPLOY.md → „Knjige u produkciju").',
+    };
   }
   const added = [];
   let existing = 0;
