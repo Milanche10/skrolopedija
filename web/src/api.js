@@ -55,6 +55,9 @@ export const api = {
   saveNew: (card) => req('/cards/save-new', { method: 'POST', body: card }),
   seen: (id) => req(`/cards/${id}/seen`, { method: 'POST' }),
   quizAnswer: (id, correct) => req(`/cards/${id}/quiz-answer`, { method: 'POST', body: { correct } }),
+  // adaptivni signal: kind = know | dont_know | skip
+  signal: ({ cardId = null, categoryId, kind, dwellMs = 0 }) =>
+    req('/cards/signal', { method: 'POST', body: { cardId, categoryId, kind, dwellMs } }),
 
   // feed
   feed: ({ categories = [], filter = 'all', seed = 'skrol', cursor = '0-0', limit = 10, since = '' }) => {

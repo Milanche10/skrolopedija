@@ -148,6 +148,21 @@ router.delete(
 
 // --- akcije korisnika na kartici ---
 
+// Adaptivni signal: swipe desno = "know", levo = "dont_know", prolaz = "skip".
+const SIGNAL_KINDS = ['know', 'dont_know', 'skip'];
+router.post(
+  '/signal',
+  asyncHandler(async (req, res) => {
+    const kind = String(req.body?.kind);
+    if (!SIGNAL_KINDS.includes(kind)) throw new HttpError(400, `kind mora biti: ${SIGNAL_KINDS.join(', ')}`);
+    const categoryId = intParam(req.body?.categoryId, 'categoryId');
+    const dwellMs = Math.max(0, Math.min(Number(req.body?.dwellMs) || 0, 600000));
+    const cardId = Number.isInteger(req.body?.cardId) ? req.body.cardId : null;
+    await prisma.cardSignal.create({ data: { cardId, categoryId, kind, dwellMs } });
+    res.json({ ok: true });
+  })
+);
+
 // Sačuvaj EFEMERNU (AI-generisanu, još neupisanu) karticu — tek sada ide u bazu.
 router.post(
   '/save-new',
@@ -219,6 +234,10 @@ router.post(
     if (!card) throw new HttpError(404, 'Kartica ne postoji');
     if (card.type !== 'quiz') throw new HttpError(400, 'Kartica nije kviz');
     await prisma.quizAnswer.create({ data: { cardId, correct: req.body.correct } });
+    // pogrešan/tačan kviz je i adaptivni signal za tu kategoriju
+    await prisma.cardSignal.create({
+      data: { cardId, categoryId: card.categoryId, kind: req.body.correct ? 'know' : 'dont_know', dwellMs: 0 },
+    });
     const [total, correct] = await Promise.all([
       prisma.quizAnswer.count(),
       prisma.quizAnswer.count({ where: { correct: true } }),

@@ -209,6 +209,64 @@ button {
   background: rgba(255, 59, 92, 0.28);
 }
 
+/* swipe hint (znam / ne razumem) */
+.swipe-hint {
+  position: absolute;
+  top: 96px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 16px;
+  z-index: 6;
+  backdrop-filter: blur(8px);
+  border: 2px solid;
+}
+.swipe-hint.know {
+  right: 20px;
+  color: var(--ok);
+  border-color: var(--ok);
+  background: color-mix(in oklab, var(--ok) 22%, transparent);
+  transform: rotate(8deg);
+}
+.swipe-hint.dont_know {
+  left: 26px;
+  color: oklch(0.72 0.15 250);
+  border-color: oklch(0.72 0.15 250);
+  background: color-mix(in oklab, oklch(0.72 0.15 250) 22%, transparent);
+  transform: rotate(-8deg);
+}
+
+/* Znam / Ne razumem dugmad (desktop klik + telefon) */
+.know-bar {
+  position: absolute;
+  left: 50%;
+  bottom: calc(52px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  z-index: 5;
+}
+.know-btn {
+  padding: 9px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+  color: #fff;
+  font-weight: 600;
+  font-size: 13px;
+  transition: transform var(--t-fast) var(--ease-out), background var(--t-fast) var(--ease-out);
+}
+.know-btn:active {
+  transform: scale(0.94);
+}
+.know-btn.know {
+  border-color: color-mix(in oklab, var(--ok) 60%, transparent);
+}
+.know-btn.dont {
+  border-color: color-mix(in oklab, oklch(0.72 0.15 250) 60%, transparent);
+}
+
 /* dupli-tap srce */
 .heart-burst {
   position: absolute;

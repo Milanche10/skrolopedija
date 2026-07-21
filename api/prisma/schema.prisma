@@ -86,3 +86,17 @@ model QuizAnswer {
   correct    Boolean
   answeredAt DateTime @default(now())
 }
+
+// Adaptivni signali: swipe desno = "know", levo = "dont_know", prolaz = "skip".
+// categoryId je denormalizovan da radi i za efemerne (negenerisane) kartice.
+model CardSignal {
+  id         Int      @id @default(autoincrement())
+  cardId     Int?
+  categoryId Int
+  kind       String // know | dont_know | skip
+  dwellMs    Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  @@index([categoryId])
+  @@index([createdAt])
+}

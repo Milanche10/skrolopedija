@@ -1,6 +1,7 @@
 import { prisma } from '../lib/prisma.js';
 import { generateCategoryCards } from './cardGen.js';
 import { hasAI } from '../lib/llm.js';
+import { categoryWeights, weightedPick } from './adaptive.js';
 
 let counter = 0;
 
@@ -17,7 +18,9 @@ export async function generateFreshCards({ categoryIds = [], count = 4, avoid = 
   const pool = await prisma.category.findMany({ where });
   if (!pool.length) return [];
 
-  const cat = pool[Math.floor(Math.random() * pool.length)];
+  // adaptivno: kategorije koje korisnik slabije zna dobijaju veću šansu
+  const weights = await categoryWeights();
+  const cat = weightedPick(pool, (c) => weights.get(c.id) ?? 1);
   const existing = await prisma.card.findMany({ where: { categoryId: cat.id }, select: { title: true } });
   const avoidTitles = [...existing.map((c) => c.title), ...avoid].slice(-250);
 

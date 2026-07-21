@@ -31,6 +31,19 @@ export default function App() {
   const freshTitles = useRef([]); // naslovi sveže generisanih (da se ne ponavljaju)
   const loadingFresh = useRef(false);
   const genTriedEmpty = useRef(false); // da ne ulazimo u petlju kad AI ne vrati ništa
+  const currentIdx = useRef(-1); // trenutna kartica (za merenje vremena gledanja)
+  const dwellStart = useRef(Date.now());
+  const signaledIds = useRef(new Set()); // kartice za koje je poslat eksplicitan signal
+
+  const catIdOf = (card) => card.categoryId ?? card.category?.id;
+
+  // adaptivni signal: know | dont_know | skip
+  function sendSignal(card, kind, dwellMs) {
+    if (kind !== 'skip') signaledIds.current.add(card.id);
+    api
+      .signal({ cardId: isEphemeral(card.id) ? null : card.id, categoryId: catIdOf(card), kind, dwellMs: dwellMs ?? Date.now() - dwellStart.current })
+      .catch(() => {});
+  }
 
   const isEphemeral = (id) => typeof id === 'string' && id.startsWith('gen_');
   // sveže generisanje ide samo za opšti feed (ne za Sačuvano/Knjige/Kvizovi)
@@ -115,6 +128,9 @@ export default function App() {
     hasMore.current = true;
     freshTitles.current = [];
     genTriedEmpty.current = false;
+    currentIdx.current = 0;
+    dwellStart.current = Date.now();
+    signaledIds.current = new Set();
     if (feedRef.current) feedRef.current.scrollTop = 0;
     loadFeed(true, seed, filters);
   }, [seed, filters, loadFeed]);
@@ -127,12 +143,24 @@ export default function App() {
     loadFresh().finally(() => setGenerating(false));
   }, [loading, items.length, freshAllowed, loadFresh]);
 
-  // beleži viđene kartice + poziciju + dopunjava feed
+  // beleži viđene kartice + poziciju + vreme gledanja + dopunjava feed
   function onScroll() {
     const el = feedRef.current;
     if (!el) return;
     const idx = Math.round(el.scrollTop / el.clientHeight);
     setPosition(idx + 1);
+
+    // prelazak na novu karticu → izmeri vreme na prethodnoj (pasivni "skip" signal)
+    if (idx !== currentIdx.current) {
+      const leaving = items[currentIdx.current];
+      if (leaving && !signaledIds.current.has(leaving.id)) {
+        const dwell = Date.now() - dwellStart.current;
+        if (dwell > 1200) sendSignal(leaving, 'skip', dwell); // dovoljno dugo gledano da se broji
+      }
+      currentIdx.current = idx;
+      dwellStart.current = Date.now();
+    }
+
     const current = items[idx];
     if (current && !current.seen) {
       current.seen = true;
@@ -296,6 +324,7 @@ export default function App() {
               onSave={save}
               onUnsave={unsave}
               onQuizAnswer={onQuizAnswer}
+              onSignal={(kind) => sendSignal(card, kind)}
               onToast={showToast}
             />
           ))}
