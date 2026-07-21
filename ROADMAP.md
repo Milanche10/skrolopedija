@@ -31,7 +31,8 @@ Ovo je ono što razlikuje Skrolopediju od „TikTok-a za činjenice".
 - 🟡 **AI Tutor predlozi**: posle N kartica „Ide ti biologija — pređi na genetiku?"
 
 ## 2. Dopaminske mehanike (drže pažnju)
-- 🟢 **„Da li znaš da…" / Mind-Blown kartice**: svaka ~20. kartica poseban „🤯" tip.
+- ✅ **„Da li znaš da…" / Mind-Blown kartice**: ~svaka 3. sveža tura je 🤯 iznenađujuća činjenica (poseban stil).
+- ✅ **Rabbit Hole / „Saznaj više"**: dugme → AI generiše dublje kartice o temi i ubaci ih odmah ispod.
 - 🟢 **Mystery Card**: jedna dnevno, ne znaš temu dok ne otvoriš.
 - 🟢 **Lucky Scroll / Random Topic Challenge**: dugme „potpuno nova tema danas".
 - 🟡 **Puzzle Feed**: kartica daje trag, odgovor tek posle par kartica.
@@ -42,7 +43,8 @@ Ovo je ono što razlikuje Skrolopediju od „TikTok-a za činjenice".
 - ✅ **XP + Leveli** (Novajlija → Istraživač → Učenik → Profesor → Majstor → Mudrac → Legenda) — na `/profile`.
 - ✅ **Achievements/bedževi** (10 bedževa: 100/500 kartica, 7/30 dana, 50 tačnih, kolekcionar, ekspert oblasti…).
 - ✅ **Knowledge Heatmap** (mapa znanja po kategoriji) — na `/profile`.
-- 🟢 **Level-up / bedž toast**: obavesti kad se pređe nivo ili zaradi bedž (sledeći mali korak).
+- ✅ **Level-up toast**: proslava kad se pređe nivo (posle kviza/čuvanja).
+- 🟢 **Bedž toast**: obavesti i kad se zaradi konkretan bedž (sledeći mali korak).
 - 🟡 **Boss Fight**: 20 pitanja na kraju oblasti → bedž.
 - 🟡 **Daily Challenge**: 20 kartica + 5 kvizova + 3 nove oblasti = XP.
 - 🔴 **Global Leaderboard** (Top % po oblasti) — traži multi-user (za sada single-user).
