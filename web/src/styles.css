@@ -137,6 +137,15 @@ button {
   letter-spacing: 0.01em;
   margin-bottom: 22px;
 }
+.card .kicker.wow {
+  background: linear-gradient(90deg, #f59e0b, #ec4899);
+  color: #fff;
+  font-weight: 800;
+}
+/* „Da li znaš da…" kartica — topliji, upečatljiviji ton */
+.card.wow h1 {
+  color: #ffe08a;
+}
 
 .card h1 {
   font-size: clamp(26px, 6.5vw, 40px);

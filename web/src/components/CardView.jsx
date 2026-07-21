@@ -82,7 +82,7 @@ export default function CardView({ card, saved, onSave, onUnsave, onQuizAnswer, 
 
   return (
     <article
-      className="card"
+      className={`card${card.wow ? ' wow' : ''}`}
       onClick={onDoubleTapArea}
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
@@ -98,10 +98,16 @@ export default function CardView({ card, saved, onSave, onUnsave, onQuizAnswer, 
         <QuizCard card={card} onAnswer={(ok) => onQuizAnswer(card.id, ok)} />
       ) : (
         <>
-          <span className="kicker">
-            {card.category?.icon} {card.category?.label}
-            {card.type === 'fact' && ' · Zanimljivost'}
-            {card.book && ' · 📖'}
+          <span className={`kicker${card.wow ? ' wow' : ''}`}>
+            {card.wow ? (
+              <>🤯 Da li znaš da… · {card.category?.label}</>
+            ) : (
+              <>
+                {card.category?.icon} {card.category?.label}
+                {card.type === 'fact' && ' · Zanimljivost'}
+                {card.book && ' · 📖'}
+              </>
+            )}
           </span>
           <h1>{card.title}</h1>
           <p className="body">{card.text}</p>

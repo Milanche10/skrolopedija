@@ -68,9 +68,9 @@ export const api = {
     if (since) q.set('since', since);
     return req(`/feed?${q}`);
   },
-  // sveže AI kartice (efemerne, ne u bazi) za „konstantno nov" feed
-  fresh: ({ categories = [], count = 4, avoid = [] }) =>
-    req('/feed/fresh', { method: 'POST', body: { categories, count, avoid } }),
+  // sveže AI kartice (efemerne, ne u bazi) za „konstantno nov" feed; wow = „Da li znaš da…"
+  fresh: ({ categories = [], count = 4, avoid = [], wow = false }) =>
+    req('/feed/fresh', { method: 'POST', body: { categories, count, avoid, wow } }),
 
   // korisnik
   state: () => req('/user/state'),

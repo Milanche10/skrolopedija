@@ -95,6 +95,22 @@ Vrati JSON: {"cards": [ ${count} objekata oblika {"title","text","type"} ]}.`;
   return cards;
 }
 
+/**
+ * „Da li znaš da…" — iznenađujuće, kontraintuitivne, pamtljive činjenice.
+ */
+export async function generateWowCards(category, existingTitles, count = 2) {
+  const system = `Ti si autor „mind-blown" činjenica za Skrolopediju. ${CARD_RULES}
+- Svaka kartica je IZNENAĐUJUĆA, kontraintuitivna ili malo poznata činjenica koja izazove „Ozbiljno?!".
+- "title" počinje sa „Da li znaš da…" ili sličnim; "type" je uvek "fact".
+- Mora biti činjenično TAČNO — ne izmišljaj efektne ali lažne tvrdnje.`;
+  const user = `Oblast: "${category.label}". Napiši ${count} iznenađujuće činjenice.
+Izbegavaj već korišćene naslove:
+${existingTitles.slice(0, 60).map((t) => `- ${t}`).join('\n') || '(nema)'}
+Vrati JSON: {"cards": [ {"title","text","type":"fact"} ]}.`;
+  const raw = await callLLM({ system, user, maxTokens: 2000 });
+  return cleanCards(asCardArray(extractJson(raw))).map((c) => ({ ...c, type: 'fact' }));
+}
+
 function technicalGuidance(key) {
   const map = {
     'sajber-bezbednost':

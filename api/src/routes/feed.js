@@ -16,7 +16,8 @@ router.post(
     const categories = Array.isArray(req.body?.categories) ? req.body.categories.map(Number) : [];
     const count = Math.min(Math.max(Number(req.body?.count) || 4, 1), 8);
     const avoid = Array.isArray(req.body?.avoid) ? req.body.avoid.map(String).slice(0, 120) : [];
-    const items = await generateFreshCards({ categoryIds: categories, count, avoid });
+    const wow = Boolean(req.body?.wow);
+    const items = await generateFreshCards({ categoryIds: categories, count, avoid, wow });
     res.json({ items });
   })
 );

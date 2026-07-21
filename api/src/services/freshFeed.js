@@ -1,5 +1,5 @@
 import { prisma } from '../lib/prisma.js';
-import { generateCategoryCards } from './cardGen.js';
+import { generateCategoryCards, generateWowCards } from './cardGen.js';
 import { hasAI } from '../lib/llm.js';
 import { categoryWeights, weightedPick } from './adaptive.js';
 
@@ -11,7 +11,7 @@ let counter = 0;
  * i izbegava naslove koji već postoje ili su nedavno viđeni (`avoid`).
  * Na svaku grešku / iscrpljen AI limit vraća [] — feed nastavlja sa postojećim karticama.
  */
-export async function generateFreshCards({ categoryIds = [], count = 4, avoid = [] }) {
+export async function generateFreshCards({ categoryIds = [], count = 4, avoid = [], wow = false }) {
   if (!hasAI()) return [];
   const where = { isActive: true, key: { not: 'knjige' } };
   if (categoryIds.length) where.id = { in: categoryIds.filter((n) => Number.isInteger(n) && n > 0) };
@@ -26,9 +26,11 @@ export async function generateFreshCards({ categoryIds = [], count = 4, avoid = 
 
   let cards;
   try {
-    cards = await generateCategoryCards(cat, avoidTitles, count);
+    cards = wow
+      ? await generateWowCards(cat, avoidTitles, count)
+      : await generateCategoryCards(cat, avoidTitles, count);
   } catch (err) {
-    console.warn(`Sveže generisanje (kat ${cat.key}) nije uspelo:`, err.message);
+    console.warn(`Sveže generisanje (kat ${cat.key}, wow=${wow}) nije uspelo:`, err.message);
     return [];
   }
 
@@ -41,6 +43,7 @@ export async function generateFreshCards({ categoryIds = [], count = 4, avoid = 
     source: 'ai',
     sourceRef: null,
     ephemeral: true,
+    wow: Boolean(wow),
     categoryId: cat.id,
     category: { id: cat.id, key: cat.key, label: cat.label, color: cat.color, icon: cat.icon },
     book: null,

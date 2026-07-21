@@ -34,6 +34,20 @@ export default function App() {
   const currentIdx = useRef(-1); // trenutna kartica (za merenje vremena gledanja)
   const dwellStart = useRef(Date.now());
   const signaledIds = useRef(new Set()); // kartice za koje je poslat eksplicitan signal
+  const levelRef = useRef(null); // za detekciju prelaska nivoa
+
+  // proveri da li je korisnik prešao nivo → proslava
+  async function checkLevelUp() {
+    try {
+      const s = await api.stats();
+      if (levelRef.current != null && s.level.index > levelRef.current) {
+        showToast(`Nivo gore! ${s.level.icon} ${s.level.name} 🎉`, 3800);
+      }
+      levelRef.current = s.level.index;
+    } catch {
+      /* nebitno */
+    }
+  }
 
   const catIdOf = (card) => card.categoryId ?? card.category?.id;
 
@@ -62,6 +76,7 @@ export default function App() {
         setCategories(cats.filter((c) => c.isActive));
         setSavedIds(new Set(state.savedIds));
         setStreak(visit.count);
+        api.stats().then((s) => { levelRef.current = s.level.index; }).catch(() => {});
         if (state.filters && (state.filters.categories?.length || state.filters.filter)) {
           setFilters({ categories: state.filters.categories || [], filter: state.filters.filter || 'all' });
         }
@@ -103,10 +118,12 @@ export default function App() {
     if (loadingFresh.current) return 0;
     loadingFresh.current = true;
     try {
+      const wow = Math.random() < 0.3; // ~svaka treća tura je „Da li znaš da…"
       const res = await api.fresh({
         categories: filters.categories,
-        count: 4,
+        count: wow ? 2 : 4,
         avoid: freshTitles.current.slice(-60),
+        wow,
       });
       if (res.items?.length) {
         freshTitles.current.push(...res.items.map((c) => c.title));
@@ -217,6 +234,7 @@ export default function App() {
       } else {
         await api.save(id);
       }
+      checkLevelUp();
     } catch (e) {
       setSavedIds((s) => {
         const n = new Set(s);
@@ -236,7 +254,7 @@ export default function App() {
     if (filters.filter === 'saved') setSeed(randomSeed());
   }
   function onQuizAnswer(id, correct) {
-    api.quizAnswer(id, correct).catch(() => {});
+    api.quizAnswer(id, correct).then(checkLevelUp).catch(() => {});
   }
 
   function toggleStory(catId) {
