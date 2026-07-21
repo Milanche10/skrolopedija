@@ -239,7 +239,12 @@ export default function App() {
               Skrol<span>opedija</span>
             </div>
             <div className="top-actions">
-              <span className="streak-pill">🔥 {streak}</span>
+              <Link className="streak-pill" to="/profile" style={{ textDecoration: 'none', color: 'inherit' }} aria-label="Profil i streak">
+                🔥 {streak}
+              </Link>
+              <Link className="icon-btn" to="/profile" aria-label="Profil" style={{ textDecoration: 'none' }}>
+                🏆
+              </Link>
               <button className="icon-btn" onClick={() => setSheetOpen(true)} aria-label="Filteri">
                 ☰
               </button>

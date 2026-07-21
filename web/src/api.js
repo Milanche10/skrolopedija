@@ -69,6 +69,7 @@ export const api = {
 
   // korisnik
   state: () => req('/user/state'),
+  stats: () => req('/user/stats'),
   visit: () => req('/user/visit', { method: 'POST' }),
   setFilters: (body) => req('/user/filters', { method: 'PUT', body }),
 

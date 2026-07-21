@@ -829,6 +829,195 @@ button {
   }
 }
 
+/* ============================================================
+   PROFIL / GEJMIFIKACIJA
+   ============================================================ */
+.profile {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: max(16px, env(safe-area-inset-top)) 16px calc(40px + env(safe-area-inset-bottom));
+}
+.profile .back {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  display: inline-block;
+  margin-bottom: 16px;
+}
+.profile .sec-title {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 28px 2px 12px;
+}
+
+/* nivo + XP */
+.level-card {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  background: linear-gradient(150deg, color-mix(in oklab, var(--accent) 22%, var(--surface)), var(--surface));
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  padding: 20px;
+}
+.level-icon {
+  font-size: 46px;
+  width: 72px;
+  height: 72px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+}
+.level-body {
+  flex: 1;
+  min-width: 0;
+}
+.level-name {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.level-xp {
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+.xp-bar {
+  height: 10px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+.xp-bar > div {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), oklch(0.72 0.19 320));
+  border-radius: 5px;
+  transition: width 600ms var(--ease-out);
+}
+.level-next {
+  margin-top: 6px;
+  font-size: 12.5px;
+}
+
+/* ključni brojevi */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-top: 14px;
+}
+.stat-box {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 8px;
+  text-align: center;
+}
+.stat-num {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.stat-lbl {
+  font-size: 11.5px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+/* bedževi */
+.ach-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+}
+.ach {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px;
+  opacity: 0.55;
+}
+.ach.on {
+  opacity: 1;
+  border-color: color-mix(in oklab, var(--accent) 50%, var(--line));
+  background: linear-gradient(160deg, color-mix(in oklab, var(--accent) 12%, var(--surface)), var(--surface));
+}
+.ach-icon {
+  font-size: 28px;
+}
+.ach-label {
+  font-weight: 700;
+  font-size: 14px;
+  margin-top: 4px;
+}
+.ach-desc {
+  font-size: 12px;
+  margin-top: 2px;
+  line-height: 1.35;
+}
+.ach-bar {
+  height: 5px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  margin-top: 8px;
+}
+.ach-bar > div {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 3px;
+}
+
+/* knowledge heatmap */
+.heatmap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.heat-row {
+  display: grid;
+  grid-template-columns: 130px 1fr 48px;
+  align-items: center;
+  gap: 10px;
+}
+.heat-cat {
+  font-size: 13px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.heat-bar {
+  height: 12px;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.heat-bar > div {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 600ms var(--ease-out);
+  min-width: 2px;
+}
+.heat-num {
+  font-size: 12px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 480px) {
+  .stat-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .heat-row {
+    grid-template-columns: 104px 1fr 44px;
+  }
+}
+
 /* ---------- REDUCED MOTION ---------- */
 @media (prefers-reduced-motion: reduce) {
   *,

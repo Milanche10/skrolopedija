@@ -1,8 +1,17 @@
 import { Router } from 'express';
 import { prisma } from '../lib/prisma.js';
 import { asyncHandler } from '../lib/errors.js';
+import { computeStats } from '../services/gamification.js';
 
 const router = Router();
+
+// Gejmifikacija: XP, nivo, bedževi, Knowledge heatmap (računato iz aktivnosti).
+router.get(
+  '/stats',
+  asyncHandler(async (req, res) => {
+    res.json(await computeStats());
+  })
+);
 
 async function getState() {
   let state = await prisma.userState.findUnique({ where: { id: 1 } });
