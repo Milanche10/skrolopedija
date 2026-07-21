@@ -1,12 +1,32 @@
-// Svi pozivi idu kroz Vite proxy na /api → api servis.
+// Svi pozivi idu kroz Vite proxy (dev) / Netlify redirect (prod) na /api → api servis.
 const BASE = '/api';
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-async function req(path, opts = {}) {
-  const res = await fetch(BASE + path, {
-    headers: { 'Content-Type': 'application/json' },
-    ...opts,
-    body: opts.body ? JSON.stringify(opts.body) : undefined,
-  });
+// Besplatni hosting (Render) uspava servis posle 15 min — prvi poziv posle pauze
+// vrati 502/503/504 dok se budi (~30-50s). GET pozive zato ponovimo par puta.
+async function req(path, opts = {}, attempt = 0) {
+  let res;
+  try {
+    res = await fetch(BASE + path, {
+      headers: { 'Content-Type': 'application/json' },
+      ...opts,
+      body: opts.body ? JSON.stringify(opts.body) : undefined,
+    });
+  } catch (err) {
+    // mrežna greška (npr. tajm-aut buđenja) — ponovi za GET
+    const method = (opts.method || 'GET').toUpperCase();
+    if (method === 'GET' && attempt < 4) {
+      await sleep(3000 * (attempt + 1));
+      return req(path, opts, attempt + 1);
+    }
+    throw err;
+  }
+  const waking = res.status === 502 || res.status === 503 || res.status === 504;
+  const method = (opts.method || 'GET').toUpperCase();
+  if (waking && method === 'GET' && attempt < 4) {
+    await sleep(3000 * (attempt + 1));
+    return req(path, opts, attempt + 1);
+  }
   const text = await res.text();
   const data = text ? JSON.parse(text) : null;
   if (!res.ok) throw new Error(data?.error || `Greška ${res.status}`);
