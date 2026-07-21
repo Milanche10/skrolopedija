@@ -13,10 +13,13 @@
  *   `node scripts/processBooks.js <bookId>` — obradi samo jednu knjigu (i ponovo, ako je završena)
  *   `node scripts/processBooks.js scan`     — samo registruj fajlove, bez obrade
  */
+import fs from 'fs/promises';
 import { prisma } from '../src/lib/prisma.js';
 import { scanKnowledgeDir } from '../src/services/scan.js';
 import { processBook } from '../src/services/bookPipeline.js';
 import { aiStatus } from '../src/lib/llm.js';
+
+const MAX_FILE_MB = Number(process.env.MAX_FILE_MB) || 50;
 
 const arg = process.argv[2] || '';
 const scanOnly = arg === 'scan';
@@ -29,6 +32,23 @@ if (!ai.ready) {
 }
 const dbHost = (process.env.DATABASE_URL || '').split('@')[1]?.split('/')[0] || '?';
 console.log(`AI: ${ai.provider}/${ai.model} · Baza: ${dbHost}`);
+
+// Neon (i drugi serverless Postgres) se uspavaju — probudi bazu pre rada,
+// da hladan start ne obori prvi upit (Prisma pool_timeout je samo 10s).
+async function warmup(retries = 6) {
+  for (let i = 0; i <= retries; i++) {
+    try {
+      await prisma.$queryRaw`SELECT 1`;
+      if (i > 0) console.log('Baza je budna.');
+      return;
+    } catch (e) {
+      if (i === retries) throw e;
+      console.log(`Budim bazu… (pokušaj ${i + 1}/${retries})`);
+      await new Promise((r) => setTimeout(r, 4000));
+    }
+  }
+}
+await warmup();
 
 // registruj nove fajlove (bez pokretanja pozadinskih poslova — obrada ide ovde, redom)
 const scan = await scanKnowledgeDir(false);
@@ -56,8 +76,18 @@ if (onlyId) {
   });
 }
 
-console.log(`Za obradu: ${books.length} knjiga.`);
+console.log(`Za obradu: ${books.length} knjiga (preskačem fajlove > ${MAX_FILE_MB}MB).`);
 for (const b of books) {
+  try {
+    const { size } = await fs.stat(b.filePath);
+    const mb = size / 1024 / 1024;
+    if (mb > MAX_FILE_MB && !onlyId) {
+      console.log(`\n⏭  Preskačem "${b.title}" (${mb.toFixed(0)}MB > ${MAX_FILE_MB}MB). Obradi pojedinačno: processBooks.js ${b.id}`);
+      continue;
+    }
+  } catch {
+    /* stat pao — pusti pipeline da prijavi grešku */
+  }
   console.log(`\n→ Obrađujem: "${b.title}" (id ${b.id})`);
   await processBook(b.id); // sekvencijalno — ne gušimo AI; greške završe kao status=failed
   const done = await prisma.book.findUnique({ where: { id: b.id } });
