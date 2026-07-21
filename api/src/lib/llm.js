@@ -13,6 +13,8 @@ const PROVIDER = (process.env.AI_PROVIDER || 'ollama').toLowerCase();
 // --- Ollama podešavanja ---
 const OLLAMA_BASE = (process.env.OLLAMA_BASE_URL || 'http://host.docker.internal:11434').replace(/\/$/, '');
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'llama3.1:8b';
+// CPU inferencija je spora (~5 tok/s), pa je timeout velik i podesiv.
+const OLLAMA_TIMEOUT_MS = Number(process.env.OLLAMA_TIMEOUT_MS) || 900000; // 15 min
 
 // --- OpenAI-kompatibilan API (Groq free tier je podrazumevani cilj) ---
 const OPENAI_BASE = (process.env.OPENAI_BASE_URL || 'https://api.groq.com/openai/v1').replace(/\/$/, '');
@@ -190,7 +192,7 @@ async function callOllama({ system, user, model, maxTokens, retries, json }) {
           ],
           options: { temperature: 0.7, num_predict: maxTokens },
         }),
-        signal: AbortSignal.timeout(180000),
+        signal: AbortSignal.timeout(OLLAMA_TIMEOUT_MS),
       });
       if (!res.ok) {
         const body = await res.text();

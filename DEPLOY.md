@@ -82,18 +82,27 @@ Knjige (PDF/DOCX) ne šalju se na server: fajlovi su pod autorskim pravima, Rend
 trajni disk, a Groq bi obradu naplaćivao kroz limite. Umesto toga, **obrada ide lokalno
 (besplatna Ollama), a kartice se upisuju direktno u produkcijsku bazu**:
 
+**Preporučeno — kroz Groq (brzo):** Ollama na CPU je spora (~5 tokena/s → velike knjige traju
+satima). Groq radi isti model ~100x brže i besplatan je, pa je za obradu praktičniji. Tekst
+odlomaka ide Groq-u (parafraza), ali PDF fajl ostaje kod tebe.
+
 ```bash
 # 1. ubaci knjige u folder "Baza znanja/"
-# 2. pokreni jednokratnu obradu uperenu u Neon (zameni connection string svojim):
+# 2. obradi ih kroz Groq, upiši kartice u Neon (zameni oba stringa svojim):
 docker compose run --rm \
-  -e DATABASE_URL="postgresql://neondb_owner:...@ep-....neon.tech/neondb?sslmode=require" \
-  api sh -c "npx prisma migrate deploy && node scripts/processBooks.js"
+  -e DATABASE_URL="postgresql://neondb_owner:...@ep-....neon.tech/neondb?sslmode=require&connect_timeout=15" \
+  -e AI_PROVIDER=openai \
+  -e OPENAI_API_KEY="gsk_...tvoj-groq-kljuc..." \
+  api node scripts/processBooks.js
 ```
 
+**Alternativa — potpuno lokalno (Ollama):** izostavi `AI_PROVIDER`/`OPENAI_API_KEY` i tekst
+nikad ne napušta računar. Sporo, ali radi; za velike knjige podesi `-e OLLAMA_TIMEOUT_MS=1800000`.
+
 Skripta skenira folder, registruje nove fajlove (dedup po hash-u — već obrađene preskače),
-obradi ih redom kroz Ollamu (segment po segment, sa progresom u konzoli) i upiše kartice u
-Neon. Čim se završi, kartice su vidljive na sajtu. Za ponovnu obradu jedne knjige:
-`... node scripts/processBooks.js <bookId>`.
+obradi ih redom (segment po segment, sa progresom u konzoli) i upiše kartice u Neon. Čim se
+završi, kartice su vidljive na sajtu. Opcije: `... processBooks.js scan` (samo lista),
+`... processBooks.js <bookId>` (jedna knjiga, i ponovo ako je već obrađena).
 
 Alternativa: upload kroz admin na sajtu — radi (obrada ide kroz Groq), fajl je efemeran ali
 IZVUČENE KARTICE ostaju trajno u bazi.

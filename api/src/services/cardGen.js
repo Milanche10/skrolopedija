@@ -11,26 +11,54 @@ const CARD_RULES = `Pravila za kartice:
 
 const QUIZ_RULES = `Kviz kartica je JSON objekat: {"title": "...", "quiz": {"q": "pitanje", "opts": ["A","B","C","D"], "ok": <indeks tačnog 0-3>, "expl": "objašnjenje u 1-2 rečenice"}}. Sve na srpskom, latinica.`;
 
+// Uzmi prvu ne-praznu vrednost iz više mogućih imena polja (modeli variraju,
+// slabiji modeli često vrate srpska imena: naslov/tekst umesto title/text).
+function pick(obj, ...keys) {
+  for (const k of keys) {
+    const v = obj?.[k];
+    if (v !== undefined && v !== null && v !== '') return v;
+  }
+  return undefined;
+}
+
 // Različiti modeli (Ollama u json režimu) umeju da umotaju niz u objekat —
-// prihvati niz direktno, ili {cards:[...]}, ili prvi niz u objektu.
-function asCardArray(parsed) {
+// prihvati niz direktno, ili {cards:[...]}, {kartice/karte:[...]}, ili prvi niz u objektu.
+export function asCardArray(parsed) {
   if (Array.isArray(parsed)) return parsed;
   if (parsed && typeof parsed === 'object') {
-    if (Array.isArray(parsed.cards)) return parsed.cards;
-    if (Array.isArray(parsed.kartice)) return parsed.kartice;
-    if (Array.isArray(parsed.items)) return parsed.items;
+    const named = pick(parsed, 'cards', 'kartice', 'karte', 'items', 'lekcije');
+    if (Array.isArray(named)) return named;
     const firstArr = Object.values(parsed).find((v) => Array.isArray(v));
     if (firstArr) return firstArr;
     // model je vratio jednu karticu kao objekat — umotaj u niz
-    if (parsed.title && parsed.text) return [parsed];
+    if (pick(parsed, 'title', 'naslov') && pick(parsed, 'text', 'tekst')) return [parsed];
   }
   return [];
 }
 
-function cleanCards(arr) {
+export function cleanCards(arr) {
   return arr
-    .filter((c) => c && c.title && c.text)
-    .map((c) => ({ title: String(c.title), text: String(c.text), type: c.type === 'fact' ? 'fact' : 'lesson' }));
+    .map((c) => ({
+      title: pick(c, 'title', 'naslov', 'naziv'),
+      text: pick(c, 'text', 'tekst', 'sadrzaj', 'sadržaj', 'opis'),
+      type: pick(c, 'type', 'tip') === 'fact' ? 'fact' : 'lesson',
+    }))
+    .filter((c) => c.title && c.text)
+    .map((c) => ({ title: String(c.title), text: String(c.text), type: c.type }));
+}
+
+// Normalizuj kviz iz modela (toleriše srpska imena polja).
+export function normalizeQuiz(obj) {
+  const quiz = obj?.quiz || obj?.kviz || obj;
+  if (!quiz) return null;
+  const q = pick(quiz, 'q', 'pitanje', 'question');
+  const opts = pick(quiz, 'opts', 'opcije', 'odgovori', 'options');
+  let ok = pick(quiz, 'ok', 'tacan', 'tačan', 'correct', 'answer');
+  const expl = pick(quiz, 'expl', 'objasnjenje', 'objašnjenje', 'explanation') || '';
+  if (!q || !Array.isArray(opts) || opts.length < 2) return null;
+  ok = Number(ok);
+  if (!Number.isInteger(ok) || ok < 0 || ok >= opts.length) return null;
+  return { title: pick(obj, 'title', 'naslov') || String(q), quiz: { q: String(q), opts: opts.map(String), ok, expl: String(expl) } };
 }
 
 /**
@@ -94,10 +122,8 @@ export async function quizFromLessons({ bookTitle, lessons }) {
   const user = `Iz sledećih lekcija iz knjige "${bookTitle}" napravi JEDNO dobro kviz pitanje sa 4 ponuđena odgovora (samo jedan tačan):
 ${lessons.map((l) => `- ${l.title}: ${l.text}`).join('\n')}`;
   const raw = await callLLM({ system, user, maxTokens: 1500 });
-  const q = extractJson(raw);
-  if (!q?.quiz?.q || !Array.isArray(q.quiz.opts) || typeof q.quiz.ok !== 'number') {
-    throw new Error('Neispravna kviz kartica iz modela');
-  }
+  const q = normalizeQuiz(extractJson(raw));
+  if (!q) throw new Error('Neispravna kviz kartica iz modela');
   return q;
 }
 
