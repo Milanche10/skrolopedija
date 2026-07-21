@@ -2,8 +2,22 @@ import { Router } from 'express';
 import { Prisma } from '@prisma/client';
 import { prisma } from '../lib/prisma.js';
 import { HttpError, asyncHandler, requireFields, intParam } from '../lib/errors.js';
+import { explainCard } from '../services/cardGen.js';
 
 const router = Router();
+
+const EXPLAIN_MODES = ['eli10', 'example', 'deeper'];
+
+// AI objašnjenje kartice (jednostavno / primer iz života / dublje).
+router.post(
+  '/explain',
+  asyncHandler(async (req, res) => {
+    requireFields(req.body, ['title', 'text']);
+    const mode = EXPLAIN_MODES.includes(req.body.mode) ? req.body.mode : 'eli10';
+    const text = await explainCard({ title: String(req.body.title), text: String(req.body.text), mode });
+    res.json({ mode, text });
+  })
+);
 
 const TYPES = ['lesson', 'fact', 'quiz', 'book'];
 const SOURCES = ['seed', 'book', 'ai', 'web'];

@@ -53,6 +53,8 @@ export const api = {
   unsave: (id) => req(`/cards/${id}/save`, { method: 'DELETE' }),
   // sačuvaj efemernu (AI-generisanu) karticu — tek tada ide u bazu
   saveNew: (card) => req('/cards/save-new', { method: 'POST', body: card }),
+  // AI objašnjenje: mode = eli10 | example | deeper
+  explain: ({ title, text, mode }) => req('/cards/explain', { method: 'POST', body: { title, text, mode } }),
   seen: (id) => req(`/cards/${id}/seen`, { method: 'POST' }),
   quizAnswer: (id, correct) => req(`/cards/${id}/quiz-answer`, { method: 'POST', body: { correct } }),
   // adaptivni signal: kind = know | dont_know | skip

@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { categoryGlow } from './hexUtil.js';
+import { api } from '../api.js';
 import ActionRail from './ActionRail.jsx';
 import QuizCard from './QuizCard.jsx';
 
@@ -9,10 +10,21 @@ export default function CardView({ card, saved, onSave, onUnsave, onQuizAnswer, 
   const [burst, setBurst] = useState(false);
   const [dragX, setDragX] = useState(0);
   const [dragging, setDragging] = useState(false);
+  const [explain, setExplain] = useState(null); // { mode, loading, text }
   const lastTap = useRef(0);
   const touch = useRef(null);
   const swiped = useRef(false);
   const color = card.category?.color || '#8b5cf6';
+
+  async function runExplain(mode) {
+    setExplain({ mode, loading: true, text: '' });
+    try {
+      const r = await api.explain({ title: card.title, text: card.text, mode });
+      setExplain({ mode, loading: false, text: r.text });
+    } catch (e) {
+      setExplain({ mode, loading: false, text: 'Objašnjenje nije uspelo: ' + e.message });
+    }
+  }
 
   function toggleSave() {
     if (saved) onUnsave(card.id);
@@ -114,10 +126,30 @@ export default function CardView({ card, saved, onSave, onUnsave, onQuizAnswer, 
         </div>
       )}
 
-      <ActionRail card={card} saved={saved} onSave={toggleSave} onShare={share} onSource={showSource} />
+      <ActionRail card={card} saved={saved} onSave={toggleSave} onShare={share} onSource={showSource} onExplain={() => runExplain('eli10')} />
       {burst && (
         <div className="heart-burst">
           <span>❤️</span>
+        </div>
+      )}
+
+      {explain && (
+        <div className="sheet-backdrop" onClick={(e) => { e.stopPropagation(); setExplain(null); }}>
+          <div className="sheet explain-sheet" onClick={(e) => e.stopPropagation()}>
+            <div className="grip" />
+            <div className="explain-modes">
+              <button className={explain.mode === 'eli10' ? 'on' : ''} onClick={() => runExplain('eli10')}>🧒 Kao detetu</button>
+              <button className={explain.mode === 'example' ? 'on' : ''} onClick={() => runExplain('example')}>🌍 Primer</button>
+              <button className={explain.mode === 'deeper' ? 'on' : ''} onClick={() => runExplain('deeper')}>🔬 Dublje</button>
+            </div>
+            <div className="explain-body">
+              {explain.loading ? (
+                <div className="explain-loading"><span className="spinner" /> AI razmišlja…</div>
+              ) : (
+                explain.text
+              )}
+            </div>
+          </div>
         </div>
       )}
     </article>

@@ -144,6 +144,21 @@ ${lessons.map((l) => `- ${l.title}: ${l.text}`).join('\n')}`;
 }
 
 /**
+ * Objasni karticu drugačije: jednostavno („kao detetu") ili kroz primer iz života.
+ */
+export async function explainCard({ title, text, mode = 'eli10' }) {
+  const styles = {
+    eli10: 'Objasni ovo kao da pričaš pametnom desetogodišnjaku: jednostavne reči, kratke rečenice, bez žargona, uz poređenje iz svakodnevnog života.',
+    example: 'Daj JEDAN konkretan, upečatljiv primer iz stvarnog života koji objašnjava ovu ideju. Počni sa „Na primer,".',
+    deeper: 'Idi korak dublje: objasni zašto je ovo tako i jednu manje poznatu ali tačnu posledicu ili detalj.',
+  };
+  const system = `Ti si topao, jasan učitelj za aplikaciju Skrolopedija. Odgovaraš na srpskom (latinica), 3–5 rečenica, bez uvoda tipa „Naravno". ${styles[mode] || styles.eli10}`;
+  const user = `Kartica:\nNaslov: ${title}\nTekst: ${text}\n\nNapiši objašnjenje (samo tekst, bez JSON-a).`;
+  const raw = await callLLM({ system, user, maxTokens: 900, json: false });
+  return String(raw).trim();
+}
+
+/**
  * Iz sirovog web teksta (Wikipedia) napravi kartice.
  */
 export async function webTextToCards({ category, rawText, sourceUrl, count = 3 }) {
