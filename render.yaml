@@ -7,9 +7,9 @@ services:
     runtime: docker
     plan: free
     healthCheckPath: /health
-    # Dockerfile je u api/ folderu — obe putanje su relativne od korena repo-a
-    dockerfilePath: ./api/Dockerfile
-    dockerContext: ./api
+    # Dockerfile je u KORENU repo-a i gradi se iz korenskog konteksta (Render default).
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
     dockerCommand: sh -c "npx prisma migrate deploy && (node scripts/seed.js || true) && npm start"
     envVars:
       - key: DATABASE_URL

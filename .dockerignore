@@ -1,0 +1,11 @@
+# Drži build kontekst malim (Render/Docker gradi iz korena repo-a).
+**/node_modules
+**/.git
+Baza znanja/
+baza-znanja/
+web/
+docs/
+dist/
+uploads/
+*.log
+.env
