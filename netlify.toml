@@ -8,7 +8,7 @@
 # /api/* → Render API (proxy na Netlify edge-u, nema CORS problema)
 [[redirects]]
   from = "/api/*"
-  to = "https://skrolopedija-api.onrender.com/:splat"
+  to = "https://skrolopedija.onrender.com/:splat"
   status = 200
   force = true
 
