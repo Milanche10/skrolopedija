@@ -23,10 +23,10 @@ Princip: primenjujemo jednu po jednu; gde već imamo bolje rešenje — ostaje n
 
 ## 1. Adaptivno učenje — SRŽ „wow" faktora (najveći prioritet)
 Ovo je ono što razlikuje Skrolopediju od „TikTok-a za činjenice".
-- 🟡 **Swipe signali**: swipe levo = „nisam razumeo", desno = „znam", gore = sledeće. Beleži se po kartici/temi.
-- 🟡 **Dwell-time („AI Reading Mind")**: meri koliko dugo gledaš karticu → procena lako/zanimljivo/nejasno.
-- 🔴 **Spaced repetition (Anki motor)**: teme koje grešiš/ne razumeš vraćaju se češće; SM-2 algoritam u pozadini.
-- 🟡 **Adaptivni redosled feeda**: AI bira sledeće na osnovu signala (više onoga što ne ide, manje savladanog).
+- ✅ **Swipe signali**: swipe levo = „ne razumem", desno = „znam" (+ dugmad za desktop). Beleži se `CardSignal`.
+- ✅ **Dwell-time („AI Reading Mind")**: meri se vreme na kartici → pasivni „skip" signal.
+- ✅ **Adaptivni redosled (fresh)**: sveže generisanje ponderisano — više iz oblasti koje slabije znaš; kviz je takođe signal.
+- 🔴 **Spaced repetition (Anki motor)**: teme koje grešiš vraćaju se češće; SM-2 algoritam (sledeće).
 - 🟢 **Ponovi pogrešan kviz**: ista tema se vrati kroz par minuta ako pogrešiš (mini verzija SR-a).
 - 🟡 **AI Tutor predlozi**: posle N kartica „Ide ti biologija — pređi na genetiku?"
 
@@ -54,7 +54,7 @@ Ovo je ono što razlikuje Skrolopediju od „TikTok-a za činjenice".
 - 🟡 **Interesovanja → personalizovani feed**: biraš teme, AI pravi feed.
 
 ## 5. Tipovi sadržaja (više čula = bolje pamćenje)
-- 🟢 **„Objasni kao da imam 10 godina" / „Primer iz stvarnog života"**: dugme na kartici → AI varijanta.
+- ✅ **„Objasni kao da imam 10 godina" / „Primer iz života" / „Dublje"**: dugme 💡 na kartici → AI modal.
 - 🟡 **Slike / ilustracije po kartici** (AI ili stock; pažljivo sa troškom/pravima).
 - 🟡 **Audio feed (15s / podcast mod)**: TTS čita kartice, skroluješ dok voziš.
 - 🟡 **Grafici / mape / timeline** za pogodne teme.
