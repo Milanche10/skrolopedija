@@ -39,8 +39,10 @@ Ovo je ono što razlikuje Skrolopediju od „TikTok-a za činjenice".
 - 🟢 **Streak sa brojem**: ne „7 dana" nego „danas naučio 83 nove činjenice".
 
 ## 3. Gejmifikacija i napredak
-- 🟢 **XP + Leveli** (Novice → Explorer → Scholar → Professor → Master → Sage → Legend).
-- 🟢 **Achievements/bedževi** (1000 kartica, 30 dana, 500 tačnih zaredom, Master geografije).
+- ✅ **XP + Leveli** (Novajlija → Istraživač → Učenik → Profesor → Majstor → Mudrac → Legenda) — na `/profile`.
+- ✅ **Achievements/bedževi** (10 bedževa: 100/500 kartica, 7/30 dana, 50 tačnih, kolekcionar, ekspert oblasti…).
+- ✅ **Knowledge Heatmap** (mapa znanja po kategoriji) — na `/profile`.
+- 🟢 **Level-up / bedž toast**: obavesti kad se pređe nivo ili zaradi bedž (sledeći mali korak).
 - 🟡 **Boss Fight**: 20 pitanja na kraju oblasti → bedž.
 - 🟡 **Daily Challenge**: 20 kartica + 5 kvizova + 3 nove oblasti = XP.
 - 🔴 **Global Leaderboard** (Top % po oblasti) — traži multi-user (za sada single-user).
