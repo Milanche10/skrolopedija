@@ -20,6 +20,7 @@ export default function App() {
   const [position, setPosition] = useState(1);
   const [toast, setToast] = useState(null);
   const [pullHint, setPullHint] = useState(false);
+  const [generating, setGenerating] = useState(false);
 
   const cursor = useRef('0-0');
   const sessionStart = useRef(new Date().toISOString());
@@ -27,6 +28,13 @@ export default function App() {
   const loadingMore = useRef(false);
   const feedRef = useRef(null);
   const touchStartY = useRef(0);
+  const freshTitles = useRef([]); // naslovi sveže generisanih (da se ne ponavljaju)
+  const loadingFresh = useRef(false);
+  const genTriedEmpty = useRef(false); // da ne ulazimo u petlju kad AI ne vrati ništa
+
+  const isEphemeral = (id) => typeof id === 'string' && id.startsWith('gen_');
+  // sveže generisanje ide samo za opšti feed (ne za Sačuvano/Knjige/Kvizovi)
+  const freshAllowed = filters.filter === 'all';
 
   const showToast = useCallback((msg, ms = 2200) => {
     setToast(msg);
@@ -77,14 +85,47 @@ export default function App() {
     [showToast]
   );
 
+  // sveže AI kartice (efemerne) — dopuna feeda da uvek ima „novo". Vraća broj dodatih.
+  const loadFresh = useCallback(async () => {
+    if (loadingFresh.current) return 0;
+    loadingFresh.current = true;
+    try {
+      const res = await api.fresh({
+        categories: filters.categories,
+        count: 4,
+        avoid: freshTitles.current.slice(-60),
+      });
+      if (res.items?.length) {
+        freshTitles.current.push(...res.items.map((c) => c.title));
+        setItems((prev) => [...prev, ...res.items]);
+        return res.items.length;
+      }
+      return 0;
+    } catch {
+      return 0; // AI limit/greška — feed ostaje sa postojećim karticama
+    } finally {
+      loadingFresh.current = false;
+    }
+  }, [filters]);
+
   // (ponovo) učitaj feed kad se promene filteri ili seed
   useEffect(() => {
     cursor.current = '0-0';
     sessionStart.current = new Date().toISOString();
     hasMore.current = true;
+    freshTitles.current = [];
+    genTriedEmpty.current = false;
     if (feedRef.current) feedRef.current.scrollTop = 0;
     loadFeed(true, seed, filters);
   }, [seed, filters, loadFeed]);
+
+  // ako u bazi nema kartica za izabrano (a dozvoljeno je) → odmah generiši sveže
+  useEffect(() => {
+    if (loading || items.length > 0 || !freshAllowed || genTriedEmpty.current) return;
+    genTriedEmpty.current = true;
+    setGenerating(true);
+    loadFresh().finally(() => setGenerating(false));
+  }, [loading, items.length, freshAllowed, loadFresh]);
 
   // beleži viđene kartice + poziciju + dopunjava feed
   function onScroll() {
@@ -95,9 +136,12 @@ export default function App() {
     const current = items[idx];
     if (current && !current.seen) {
       current.seen = true;
-      api.seen(current.id).catch(() => {});
+      if (!isEphemeral(current.id)) api.seen(current.id).catch(() => {});
     }
-    if (idx >= items.length - 3 && hasMore.current) loadFeed(false, seed, filters);
+    if (idx >= items.length - 3) {
+      if (hasMore.current) loadFeed(false, seed, filters);
+      else if (freshAllowed) loadFresh(); // baza iscrpljena → generiši sveže
+    }
   }
 
   // pull-to-refresh: povuci nadole na vrhu → promešaj (novi seed)
@@ -123,13 +167,35 @@ export default function App() {
   async function save(id) {
     setSavedIds((s) => new Set(s).add(id));
     try {
-      await api.save(id);
-    } catch {
+      if (isEphemeral(id)) {
+        // efemerna AI kartica — tek sada je upiši u bazu
+        const card = items.find((c) => c.id === id);
+        if (!card) return;
+        const res = await api.saveNew({
+          categoryId: card.categoryId ?? card.category?.id,
+          title: card.title,
+          text: card.text,
+          type: card.type,
+        });
+        const realId = res.card.id;
+        setItems((prev) => prev.map((c) => (c.id === id ? { ...c, id: realId, ephemeral: false } : c)));
+        setSavedIds((s) => {
+          const n = new Set(s);
+          n.delete(id);
+          n.add(realId);
+          return n;
+        });
+        showToast('Sačuvano u favorite ❤️');
+      } else {
+        await api.save(id);
+      }
+    } catch (e) {
       setSavedIds((s) => {
         const n = new Set(s);
         n.delete(id);
         return n;
       });
+      showToast('Čuvanje nije uspelo: ' + e.message, 3500);
     }
   }
   async function unsave(id) {
@@ -138,7 +204,7 @@ export default function App() {
       n.delete(id);
       return n;
     });
-    await api.unsave(id).catch(() => {});
+    if (!isEphemeral(id)) await api.unsave(id).catch(() => {});
     if (filters.filter === 'saved') setSeed(randomSeed());
   }
   function onQuizAnswer(id, correct) {
@@ -194,13 +260,20 @@ export default function App() {
           <div>Učitavam feed…</div>
         </div>
       ) : items.length === 0 ? (
-        <div className="center-msg">
-          <div style={{ fontSize: 48 }}>🗂️</div>
-          <div>Nema kartica za izabrane filtere.</div>
-          <button className="preset on" onClick={clearStory}>
-            Prikaži sve
-          </button>
-        </div>
+        generating ? (
+          <div className="center-msg">
+            <div className="spinner" />
+            <div>Generišem sveže kartice…</div>
+          </div>
+        ) : (
+          <div className="center-msg">
+            <div style={{ fontSize: 48 }}>🗂️</div>
+            <div>{freshAllowed ? 'AI trenutno nije dostupan za generisanje.' : 'Nema kartica za izabrane filtere.'}</div>
+            <button className="preset on" onClick={clearStory}>
+              Prikaži sve
+            </button>
+          </div>
+        )
       ) : (
         <div
           className="feed"
@@ -227,7 +300,7 @@ export default function App() {
       {!loading && items.length > 0 && (
         <div className="position-counter">
           {position} / {items.length}
-          {hasMore.current ? '+' : ''}
+          {hasMore.current || freshAllowed ? '+' : ''}
         </div>
       )}
 

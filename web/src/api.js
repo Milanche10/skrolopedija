@@ -51,6 +51,8 @@ export const api = {
   deleteCard: (id) => req(`/cards/${id}`, { method: 'DELETE' }),
   save: (id) => req(`/cards/${id}/save`, { method: 'POST' }),
   unsave: (id) => req(`/cards/${id}/save`, { method: 'DELETE' }),
+  // sačuvaj efemernu (AI-generisanu) karticu — tek tada ide u bazu
+  saveNew: (card) => req('/cards/save-new', { method: 'POST', body: card }),
   seen: (id) => req(`/cards/${id}/seen`, { method: 'POST' }),
   quizAnswer: (id, correct) => req(`/cards/${id}/quiz-answer`, { method: 'POST', body: { correct } }),
 
@@ -61,6 +63,9 @@ export const api = {
     if (since) q.set('since', since);
     return req(`/feed?${q}`);
   },
+  // sveže AI kartice (efemerne, ne u bazi) za „konstantno nov" feed
+  fresh: ({ categories = [], count = 4, avoid = [] }) =>
+    req('/feed/fresh', { method: 'POST', body: { categories, count, avoid } }),
 
   // korisnik
   state: () => req('/user/state'),

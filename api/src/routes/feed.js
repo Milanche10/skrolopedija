@@ -2,8 +2,24 @@ import { Router } from 'express';
 import { Prisma } from '@prisma/client';
 import { prisma } from '../lib/prisma.js';
 import { asyncHandler, HttpError } from '../lib/errors.js';
+import { generateFreshCards } from '../services/freshFeed.js';
 
 const router = Router();
+
+/**
+ * POST /feed/fresh { categories:[ids], count, avoid:[titles] }
+ * Vraća sveže AI-generisane EFEMERNE kartice (nisu u bazi dok se ne sačuvaju).
+ */
+router.post(
+  '/fresh',
+  asyncHandler(async (req, res) => {
+    const categories = Array.isArray(req.body?.categories) ? req.body.categories.map(Number) : [];
+    const count = Math.min(Math.max(Number(req.body?.count) || 4, 1), 8);
+    const avoid = Array.isArray(req.body?.avoid) ? req.body.avoid.map(String).slice(0, 120) : [];
+    const items = await generateFreshCards({ categoryIds: categories, count, avoid });
+    res.json({ items });
+  })
+);
 
 const QUIZ_INTERVAL = 9; // svaka 9. kartica je kviz (otprilike 8–10 po specifikaciji)
 const FILTERS = ['all', 'saved', 'books', 'quizzes'];

@@ -148,6 +148,37 @@ router.delete(
 
 // --- akcije korisnika na kartici ---
 
+// Sačuvaj EFEMERNU (AI-generisanu, još neupisanu) karticu — tek sada ide u bazu.
+router.post(
+  '/save-new',
+  asyncHandler(async (req, res) => {
+    requireFields(req.body, ['categoryId', 'title']);
+    const categoryId = intParam(req.body.categoryId, 'categoryId');
+    const cat = await prisma.category.findUnique({ where: { id: categoryId } });
+    if (!cat) throw new HttpError(400, 'categoryId ne postoji');
+    const type = req.body.type && TYPES.includes(req.body.type) ? req.body.type : 'lesson';
+    if (type === 'quiz') validateQuiz(req.body.quiz);
+    else if (!req.body.text) throw new HttpError(400, 'text je obavezan');
+    // dedup: ako ista kartica (kategorija + naslov) već postoji, samo je sačuvaj
+    let card = await prisma.card.findFirst({ where: { categoryId, title: req.body.title } });
+    if (!card) {
+      card = await prisma.card.create({
+        data: {
+          categoryId,
+          type,
+          title: req.body.title,
+          text: req.body.text || '',
+          quiz: req.body.quiz ?? undefined,
+          source: 'ai',
+          sourceRef: req.body.sourceRef ?? null,
+        },
+      });
+    }
+    await prisma.savedCard.upsert({ where: { cardId: card.id }, update: {}, create: { cardId: card.id } });
+    res.status(201).json({ saved: true, card });
+  })
+);
+
 router.post(
   '/:id/save',
   asyncHandler(async (req, res) => {
