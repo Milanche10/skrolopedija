@@ -26,8 +26,8 @@ Ovo je ono što razlikuje Skrolopediju od „TikTok-a za činjenice".
 - ✅ **Swipe signali**: swipe levo = „ne razumem", desno = „znam" (+ dugmad za desktop). Beleži se `CardSignal`.
 - ✅ **Dwell-time („AI Reading Mind")**: meri se vreme na kartici → pasivni „skip" signal.
 - ✅ **Adaptivni redosled (fresh)**: sveže generisanje ponderisano — više iz oblasti koje slabije znaš; kviz je takođe signal.
-- 🔴 **Spaced repetition (Anki motor)**: teme koje grešiš vraćaju se češće; SM-2 algoritam (sledeće).
-- 🟢 **Ponovi pogrešan kviz**: ista tema se vrati kroz par minuta ako pogrešiš (mini verzija SR-a).
+- ✅ **Spaced repetition (Anki SM-2)**: pogrešan kviz se vraća za ~10 min, tačan sve ređe (1→3→×ease dana). Filter „🔁 Ponavljanje (N)".
+- ✅ **Ponovi pogrešan kviz**: ista kartica se vrati po SR rasporedu (deo gornjeg).
 - 🟡 **AI Tutor predlozi**: posle N kartica „Ide ti biologija — pređi na genetiku?"
 
 ## 2. Dopaminske mehanike (drže pažnju)
