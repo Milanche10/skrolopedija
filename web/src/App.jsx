@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from './api.js';
+import { useAuth } from './auth.jsx';
 import CardView from './components/CardView.jsx';
 import StoriesBar from './components/StoriesBar.jsx';
 import FilterSheet from './components/FilterSheet.jsx';
@@ -10,6 +11,7 @@ const LIMIT = 8;
 const randomSeed = () => Math.random().toString(36).slice(2, 8);
 
 export default function App() {
+  const { user, guest, isAuthed, isAdmin, logout } = useAuth();
   const [categories, setCategories] = useState([]);
   const [items, setItems] = useState([]);
   const [savedIds, setSavedIds] = useState(new Set());
@@ -41,6 +43,7 @@ export default function App() {
 
   // proveri da li je korisnik prešao nivo → proslava
   async function checkLevelUp() {
+    if (!isAuthed) return;
     try {
       const s = await api.stats();
       if (levelRef.current != null && s.level.index > levelRef.current) {
@@ -56,6 +59,7 @@ export default function App() {
 
   // adaptivni signal: know | dont_know | skip
   function sendSignal(card, kind, dwellMs) {
+    if (!isAuthed) return; // gost nema napredak
     if (kind !== 'skip') signaledIds.current.add(card.id);
     api
       .signal({ cardId: isEphemeral(card.id) ? null : card.id, categoryId: catIdOf(card), kind, dwellMs: dwellMs ?? Date.now() - dwellStart.current })
@@ -78,12 +82,20 @@ export default function App() {
     return () => clearTimeout(t);
   }, [loading]);
 
-  // početno učitavanje: kategorije, korisničko stanje, streak
+  // kategorije se učitavaju uvek (i za gosta)
   useEffect(() => {
+    api
+      .categories()
+      .then((cats) => setCategories(cats.filter((c) => c.isActive)))
+      .catch((e) => showToast('Greška pri učitavanju: ' + e.message, 4000));
+  }, [showToast]);
+
+  // korisničko stanje (napredak/streak) samo za prijavljene
+  useEffect(() => {
+    if (!isAuthed) return;
     (async () => {
       try {
-        const [cats, state, visit] = await Promise.all([api.categories(), api.state(), api.visit()]);
-        setCategories(cats.filter((c) => c.isActive));
+        const [state, visit] = await Promise.all([api.state(), api.visit()]);
         setSavedIds(new Set(state.savedIds));
         setStreak(visit.count);
         setReviewDue(state.reviewDue || 0);
@@ -91,11 +103,11 @@ export default function App() {
         if (state.filters && (state.filters.categories?.length || state.filters.filter)) {
           setFilters({ categories: state.filters.categories || [], filter: state.filters.filter || 'all' });
         }
-      } catch (e) {
-        showToast('Greška pri učitavanju: ' + e.message, 4000);
+      } catch {
+        /* nebitno */
       }
     })();
-  }, [showToast]);
+  }, [isAuthed]);
 
   const loadFeed = useCallback(
     async (reset, useSeed, useFilters) => {
@@ -221,6 +233,10 @@ export default function App() {
   }
 
   async function save(id) {
+    if (!isAuthed) {
+      showToast('Registruj se da sačuvaš kartice ❤️', 3000);
+      return;
+    }
     setSavedIds((s) => new Set(s).add(id));
     try {
       if (isEphemeral(id)) {
@@ -265,6 +281,7 @@ export default function App() {
     if (filters.filter === 'saved') setSeed(randomSeed());
   }
   function onQuizAnswer(id, correct) {
+    if (!isAuthed) return; // gost može da odgovara, ali se ne pamti
     api.quizAnswer(id, correct).then(checkLevelUp).catch(() => {});
   }
 
@@ -316,25 +333,40 @@ export default function App() {
               Skrol<span>opedija</span>
             </div>
             <div className="top-actions">
-              <Link className="streak-pill" to="/profile" style={{ textDecoration: 'none', color: 'inherit' }} aria-label="Profil i streak">
-                🔥 {streak}
-              </Link>
-              <Link className="icon-btn" to="/profile" aria-label="Profil" style={{ textDecoration: 'none' }}>
-                🏆
-              </Link>
-              <button
-                className="icon-btn"
-                onClick={() => {
-                  api.state().then((s) => setReviewDue(s.reviewDue || 0)).catch(() => {});
-                  setSheetOpen(true);
-                }}
-                aria-label="Filteri"
-              >
-                ☰
-              </button>
-              <Link className="icon-btn" to="/admin" aria-label="Admin" style={{ textDecoration: 'none' }}>
-                ⚙️
-              </Link>
+              {isAuthed ? (
+                <>
+                  <Link className="streak-pill" to="/profile" style={{ textDecoration: 'none', color: 'inherit' }} aria-label="Profil i streak">
+                    🔥 {streak}
+                  </Link>
+                  <Link className="icon-btn" to="/profile" aria-label="Profil" style={{ textDecoration: 'none' }}>
+                    🏆
+                  </Link>
+                  <button
+                    className="icon-btn"
+                    onClick={() => {
+                      api.state().then((s) => setReviewDue(s.reviewDue || 0)).catch(() => {});
+                      setSheetOpen(true);
+                    }}
+                    aria-label="Filteri"
+                  >
+                    ☰
+                  </button>
+                  {isAdmin && (
+                    <Link className="icon-btn" to="/admin" aria-label="Admin" style={{ textDecoration: 'none' }}>
+                      ⚙️
+                    </Link>
+                  )}
+                </>
+              ) : (
+                <>
+                  <button className="icon-btn" onClick={() => setSheetOpen(true)} aria-label="Filteri">
+                    ☰
+                  </button>
+                  <button className="login-cta" onClick={logout}>
+                    Prijava / Registracija
+                  </button>
+                </>
+              )}
             </div>
           </div>
           <StoriesBar categories={categories} selected={filters.categories} onToggle={toggleStory} onClear={clearStory} />

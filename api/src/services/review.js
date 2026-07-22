@@ -3,11 +3,11 @@ import { prisma } from '../lib/prisma.js';
 const DAY = 86400000;
 
 /**
- * SM-2-lite: ažuriraj raspored ponavljanja kartice posle odgovora na kviz.
+ * SM-2-lite: ažuriraj raspored ponavljanja kartice (kviza) za datog korisnika.
  * Tačno → interval raste (1, 3, pa ×ease dana). Netačno → vraća se za ~10 min.
  */
-export async function updateReview(cardId, correct) {
-  const cur = await prisma.reviewState.findUnique({ where: { cardId } });
+export async function updateReview(userId, cardId, correct) {
+  const cur = await prisma.reviewState.findUnique({ where: { userId_cardId: { userId, cardId } } });
   let ease = cur?.ease ?? 2.5;
   let reps = cur?.reps ?? 0;
   let interval = cur?.intervalDays ?? 0;
@@ -27,13 +27,13 @@ export async function updateReview(cardId, correct) {
   }
   const dueAt = new Date(Date.now() + (correct ? interval * DAY : 10 * 60000));
   await prisma.reviewState.upsert({
-    where: { cardId },
+    where: { userId_cardId: { userId, cardId } },
     update: { ease, intervalDays: interval, reps, lapses, dueAt },
-    create: { cardId, ease, intervalDays: interval, reps, lapses, dueAt },
+    create: { userId, cardId, ease, intervalDays: interval, reps, lapses, dueAt },
   });
 }
 
-/** Broj kartica koje su „na redu" za ponavljanje (dueAt <= sada). */
-export function dueReviewCount() {
-  return prisma.reviewState.count({ where: { dueAt: { lte: new Date() } } });
+/** Broj kartica koje su „na redu" za ponavljanje za datog korisnika. */
+export function dueReviewCount(userId) {
+  return prisma.reviewState.count({ where: { userId, dueAt: { lte: new Date() } } });
 }

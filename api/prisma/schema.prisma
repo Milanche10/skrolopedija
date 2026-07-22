@@ -52,45 +52,80 @@ model Card {
   sourceRef  String?
   isActive   Boolean      @default(true)
   createdAt  DateTime     @default(now())
-  saved      SavedCard?
-  seen       SeenCard?
+  saved      SavedCard[]
+  seen       SeenCard[]
   answers    QuizAnswer[]
-  review     ReviewState?
+  review     ReviewState[]
 
   @@index([categoryId, isActive])
   @@index([bookId])
 }
 
+// Nalozi — svaki user jedinstven, sa svojim napretkom. Lozinka je HEŠIRANA (bcrypt).
+model User {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  username     String   @unique
+  passwordHash String
+  firstName    String?
+  lastName     String?
+  role         String   @default("user") // user | admin
+  paid         Boolean  @default(false) // pun pristup posle plaćanja
+  createdAt    DateTime @default(now())
+
+  state    UserState?
+  saved    SavedCard[]
+  seen     SeenCard[]
+  answers  QuizAnswer[]
+  signals  CardSignal[]
+  reviews  ReviewState[]
+}
+
 model UserState {
-  id          Int       @id @default(1)
+  userId      Int       @id
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   streakCount Int       @default(0)
   lastVisit   DateTime?
   filters     Json?
 }
 
 model SavedCard {
-  cardId    Int      @id
+  userId    Int
+  cardId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   card      Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
+
+  @@id([userId, cardId])
 }
 
 model SeenCard {
-  cardId Int      @id
+  userId Int
+  cardId Int
+  user   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   card   Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
   seenAt DateTime @default(now())
+
+  @@id([userId, cardId])
 }
 
 model QuizAnswer {
   id         Int      @id @default(autoincrement())
+  userId     Int
   cardId     Int
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   card       Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
   correct    Boolean
   answeredAt DateTime @default(now())
+
+  @@index([userId])
 }
 
-// Spaced repetition (Anki-stil SM-2): raspored ponavljanja po kartici (kvizu).
+// Spaced repetition (Anki-stil SM-2): raspored ponavljanja po korisniku i kartici.
 model ReviewState {
-  cardId       Int      @id
+  userId       Int
+  cardId       Int
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   card         Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
   ease         Float    @default(2.5)
   intervalDays Float    @default(0)
@@ -99,19 +134,21 @@ model ReviewState {
   dueAt        DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
+  @@id([userId, cardId])
   @@index([dueAt])
 }
 
 // Adaptivni signali: swipe desno = "know", levo = "dont_know", prolaz = "skip".
-// categoryId je denormalizovan da radi i za efemerne (negenerisane) kartice.
 model CardSignal {
   id         Int      @id @default(autoincrement())
+  userId     Int
   cardId     Int?
   categoryId Int
   kind       String // know | dont_know | skip
   dwellMs    Int      @default(0)
   createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([categoryId])
+  @@index([userId, categoryId])
   @@index([createdAt])
 }

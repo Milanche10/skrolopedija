@@ -3,6 +3,7 @@ import { prisma } from '../lib/prisma.js';
 import { HttpError, asyncHandler, requireFields, intParam } from '../lib/errors.js';
 import { generateCategoryCards, generateCategoryQuizzes } from '../services/cardGen.js';
 import { isDuplicateTitle } from '../services/dedup.js';
+import { requireAdmin } from '../lib/auth.js';
 
 const router = Router();
 
@@ -43,6 +44,7 @@ router.get(
 
 router.post(
   '/',
+  requireAdmin,
   asyncHandler(async (req, res) => {
     validateCategoryBody(req.body);
     const exists = await prisma.category.findUnique({ where: { key: req.body.key } });
@@ -63,6 +65,7 @@ router.post(
 
 router.put(
   '/:id',
+  requireAdmin,
   asyncHandler(async (req, res) => {
     const id = intParam(req.params.id, 'id');
     validateCategoryBody(req.body, true);
@@ -83,6 +86,7 @@ router.put(
 
 router.delete(
   '/:id',
+  requireAdmin,
   asyncHandler(async (req, res) => {
     const id = intParam(req.params.id, 'id');
     try {
@@ -95,9 +99,10 @@ router.delete(
   })
 );
 
-// AI generisanje kartica za kategoriju
+// AI generisanje kartica za kategoriju (admin — troši AI)
 router.post(
   '/:id/generate',
+  requireAdmin,
   asyncHandler(async (req, res) => {
     const id = intParam(req.params.id, 'id');
     const count = Math.min(Math.max(Number(req.body?.count) || 5, 1), 20);
@@ -126,9 +131,10 @@ router.post(
   })
 );
 
-// AI generisanje KVIZ kartica za kategoriju
+// AI generisanje KVIZ kartica za kategoriju (admin — troši AI)
 router.post(
   '/:id/quizzes',
+  requireAdmin,
   asyncHandler(async (req, res) => {
     const id = intParam(req.params.id, 'id');
     const count = Math.min(Math.max(Number(req.body?.count) || 5, 1), 15);

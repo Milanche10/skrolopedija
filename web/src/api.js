@@ -2,13 +2,33 @@
 const BASE = '/api';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// --- JWT token (u localStorage) ---
+let authToken = typeof localStorage !== 'undefined' ? localStorage.getItem('skrol_token') : null;
+let onUnauthorized = null;
+export function setToken(t) {
+  authToken = t || null;
+  if (typeof localStorage !== 'undefined') {
+    if (t) localStorage.setItem('skrol_token', t);
+    else localStorage.removeItem('skrol_token');
+  }
+}
+export function getToken() {
+  return authToken;
+}
+export function setUnauthorizedHandler(fn) {
+  onUnauthorized = fn;
+}
+
 // Besplatni hosting (Render) uspava servis posle 15 min — prvi poziv posle pauze
 // vrati 502/503/504 dok se budi (~30-50s). GET pozive zato ponovimo par puta.
 async function req(path, opts = {}, attempt = 0) {
   let res;
   try {
     res = await fetch(BASE + path, {
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+      },
       ...opts,
       body: opts.body ? JSON.stringify(opts.body) : undefined,
     });
@@ -29,12 +49,29 @@ async function req(path, opts = {}, attempt = 0) {
   }
   const text = await res.text();
   const data = text ? JSON.parse(text) : null;
+  // istekao/nevažeći token na zaštićenoj ruti → odjava (ne na samom login-u)
+  if (res.status === 401 && authToken && !path.startsWith('/auth/login') && !path.startsWith('/auth/register')) {
+    onUnauthorized?.();
+  }
   if (!res.ok) throw new Error(data?.error || `Greška ${res.status}`);
   return data;
 }
 
 export const api = {
   health: () => req('/health'),
+
+  // --- auth ---
+  register: (body) => req('/auth/register', { method: 'POST', body }),
+  login: (body) => req('/auth/login', { method: 'POST', body }),
+  me: () => req('/auth/me'),
+  updateMe: (body) => req('/auth/me', { method: 'PATCH', body }),
+  changePassword: (current, next) => req('/auth/change-password', { method: 'POST', body: { current, next } }),
+
+  // --- admin (samo admin) ---
+  adminDashboard: () => req('/admin/dashboard'),
+  adminUsers: () => req('/admin/users'),
+  adminUpdateUser: (id, body) => req(`/admin/users/${id}`, { method: 'PATCH', body }),
+  adminDeleteUser: (id) => req(`/admin/users/${id}`, { method: 'DELETE' }),
 
   // kategorije
   categories: (all = false) => req(`/categories${all ? '?all=1' : ''}`),
@@ -92,8 +129,14 @@ export const api = {
     const fd = new FormData();
     fd.append('file', file);
     for (const [k, v] of Object.entries(meta)) if (v) fd.append(k, v);
-    const res = await fetch(`${BASE}/books/upload`, { method: 'POST', body: fd });
+    const res = await fetch(`${BASE}/books/upload`, {
+      method: 'POST',
+      // ne postavljamo Content-Type (browser sam dodaje multipart boundary); samo auth
+      headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
+      body: fd,
+    });
     const data = await res.json();
+    if (res.status === 401 && authToken) onUnauthorized?.();
     if (!res.ok) throw new Error(data?.error || 'Upload nije uspeo');
     return data;
   },

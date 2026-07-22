@@ -8,3 +8,6 @@ uploads/
 # Knjige (autorska prava — ne idu u javni repo). Folder se pravi automatski pri docker compose up.
 Baza znanja/
 baza-znanja/
+
+# Lokalni admin kredencijali (NE u git)
+api/scripts/admins.local.json

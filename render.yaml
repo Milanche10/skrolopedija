@@ -10,11 +10,16 @@ services:
     # Dockerfile je u KORENU repo-a i gradi se iz korenskog konteksta (Render default).
     dockerfilePath: ./Dockerfile
     dockerContext: .
-    # Bez seed-a na svaki boot (usporava cold-start ~40s). Migrate ne blokira start servera.
-    dockerCommand: sh -c "npx prisma migrate deploy || echo migrate-skip; npm start"
+    # Boot: migracije → bootstrap admina (bezbedno, kreira samo ako fale) → start.
+    # seedAdmins radi samo ako je ADMIN_SEED postavljen; inače se preskače.
+    dockerCommand: sh -c "npx prisma migrate deploy || echo migrate-skip; node scripts/seedAdmins.js || echo seed-skip; npm start"
     envVars:
       - key: DATABASE_URL
         sync: false # Neon connection string (direktan, sa ?sslmode=require)
+      - key: JWT_SECRET
+        generateValue: true # Render generiše nasumičan tajni ključ (ne ide u git)
+      - key: ADMIN_SEED
+        sync: false # JSON niz admin naloga (plaintext lozinke ostaju samo ovde, ne u git)
       - key: AI_PROVIDER
         value: openai
       - key: OPENAI_BASE_URL

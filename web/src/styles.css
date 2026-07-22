@@ -70,6 +70,178 @@ button {
   outline-offset: 2px;
 }
 
+/* ============================================================
+   AUTH GATE — puni ekran, u stilu Digitalnog Zenita
+   ============================================================ */
+.auth-gate {
+  position: relative;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  overflow: hidden;
+}
+.auth-bg {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(70% 55% at 50% -5%, #1b5091 0%, transparent 60%),
+    radial-gradient(50% 40% at 85% 110%, #144675 0%, transparent 55%),
+    radial-gradient(40% 40% at 10% 90%, oklch(0.4 0.13 265) 0%, transparent 55%),
+    var(--bg);
+}
+.auth-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 40%, transparent 0%, rgba(7, 7, 12, 0.5) 100%);
+}
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  background: color-mix(in oklab, var(--surface) 80%, transparent);
+  backdrop-filter: blur(16px);
+  border: 1px solid color-mix(in oklab, #4a7abe 30%, var(--line));
+  border-radius: 22px;
+  padding: 32px 28px;
+  text-align: center;
+  box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.7);
+  animation: cardIn 400ms var(--ease-out);
+}
+.auth-logo {
+  height: 46px;
+  width: auto;
+  margin-bottom: 14px;
+  filter: brightness(1.4);
+}
+.auth-title {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin: 0;
+}
+.auth-title span {
+  color: oklch(0.7 0.13 250);
+}
+.auth-sub {
+  color: var(--muted);
+  font-size: 14px;
+  margin: 6px 0 22px;
+}
+.auth-tabs {
+  display: flex;
+  gap: 6px;
+  background: var(--surface-2);
+  border-radius: 999px;
+  padding: 4px;
+  margin-bottom: 18px;
+}
+.auth-tabs button {
+  flex: 1;
+  padding: 9px;
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 14px;
+  border-radius: 999px;
+  transition: background var(--t-fast) ease-out, color var(--t-fast) ease-out;
+}
+.auth-tabs button.on {
+  background: #1b5091;
+  color: #fff;
+}
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.auth-row {
+  display: flex;
+  gap: 10px;
+}
+.auth-form input {
+  width: 100%;
+  padding: 13px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--ink);
+  font-size: 15px;
+  font-family: inherit;
+}
+.auth-form input:focus {
+  outline: none;
+  border-color: #4a7abe;
+}
+.auth-err {
+  color: oklch(0.72 0.16 25);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+}
+.auth-submit {
+  margin-top: 4px;
+  padding: 14px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(90deg, #1b5091, #4a7abe);
+  color: #fff;
+  font-weight: 700;
+  font-size: 16px;
+}
+.auth-submit:disabled {
+  opacity: 0.6;
+}
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+.auth-guest {
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 15px;
+}
+.auth-note {
+  color: var(--muted);
+  font-size: 12px;
+  margin: 14px 0 0;
+  line-height: 1.5;
+}
+.login-cta {
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(90deg, #1b5091, #4a7abe);
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  white-space: nowrap;
+}
+@media (min-width: 900px) {
+  .auth-card {
+    max-width: 460px;
+    padding: 40px 36px;
+  }
+}
+
 /* ---------- FEED SHELL ---------- */
 .feed {
   height: 100dvh;
@@ -1365,5 +1537,177 @@ button {
   }
   .feed {
     scroll-behavior: auto;
+  }
+}
+
+/* ---------- ACCOUNT CARD (profil: nalog) ---------- */
+.account-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  padding: 16px;
+  margin: 12px 0 18px;
+}
+.account-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.account-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 22px;
+  color: var(--accent-ink);
+  background: linear-gradient(135deg, var(--accent), oklch(0.55 0.19 260));
+  flex: none;
+}
+.account-id {
+  flex: 1;
+  min-width: 160px;
+}
+.account-name {
+  font-weight: 700;
+  font-size: 17px;
+}
+.account-meta {
+  font-size: 12.5px;
+  margin: 1px 0 5px;
+  word-break: break-word;
+}
+.role-chip {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--accent) 16%, var(--surface-2));
+  border: 1px solid color-mix(in oklab, var(--accent) 34%, var(--line));
+}
+.account-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.btn-ghost,
+.btn-danger,
+.btn-primary {
+  border-radius: var(--r-ctl);
+  font-weight: 600;
+  font-size: 14px;
+  padding: 9px 14px;
+  cursor: pointer;
+  border: 1px solid var(--line);
+  transition: filter var(--t-fast), background var(--t-fast);
+}
+.btn-ghost {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+.btn-ghost:hover {
+  background: color-mix(in oklab, var(--accent) 12%, var(--surface-2));
+}
+.btn-danger {
+  background: transparent;
+  color: var(--danger);
+  border-color: color-mix(in oklab, var(--danger) 45%, var(--line));
+}
+.btn-danger:hover {
+  background: color-mix(in oklab, var(--danger) 14%, transparent);
+}
+.btn-primary {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: var(--accent);
+  width: 100%;
+  margin-top: 4px;
+}
+.btn-primary:hover {
+  filter: brightness(1.08);
+}
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.account-edit {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.account-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.account-tabs button {
+  flex: 1;
+  padding: 8px;
+  border-radius: var(--r-ctl);
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 13.5px;
+  cursor: pointer;
+}
+.account-tabs button.on {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: var(--accent);
+}
+.account-form {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+.account-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 12.5px;
+  color: var(--muted);
+  font-weight: 600;
+}
+.account-form input {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--r-ctl);
+  padding: 10px 12px;
+  color: var(--ink);
+  font-size: 14.5px;
+  font-family: inherit;
+}
+.account-form input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.form-ok,
+.form-err {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 12px;
+  border-radius: var(--r-ctl);
+  margin-bottom: 10px;
+}
+.form-ok {
+  color: var(--ok);
+  background: color-mix(in oklab, var(--ok) 14%, transparent);
+}
+.form-err {
+  color: var(--danger);
+  background: color-mix(in oklab, var(--danger) 14%, transparent);
+}
+@media (max-width: 480px) {
+  .form-row {
+    grid-template-columns: 1fr;
   }
 }

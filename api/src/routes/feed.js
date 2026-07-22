@@ -5,6 +5,7 @@ import { asyncHandler, HttpError } from '../lib/errors.js';
 import { generateFreshCards } from '../services/freshFeed.js';
 import { generateDeeperCards } from '../services/cardGen.js';
 import { hasAI } from '../lib/llm.js';
+import { requireUser } from '../lib/auth.js';
 
 const router = Router();
 
@@ -16,6 +17,7 @@ let deeperCounter = 0;
  */
 router.post(
   '/deeper',
+  requireUser,
   asyncHandler(async (req, res) => {
     if (!hasAI()) return res.json({ items: [] });
     if (!req.body?.title || !req.body?.text) throw new HttpError(400, 'title i text su obavezni');
@@ -65,7 +67,8 @@ router.post(
     const count = Math.min(Math.max(Number(req.body?.count) || 4, 1), 8);
     const avoid = Array.isArray(req.body?.avoid) ? req.body.avoid.map(String).slice(0, 120) : [];
     const wow = Boolean(req.body?.wow);
-    const items = await generateFreshCards({ categoryIds: categories, count, avoid, wow });
+    if (!req.user) return res.json({ items: [] }); // gost ne generiše (štednja)
+    const items = await generateFreshCards({ categoryIds: categories, count, avoid, wow, userId: req.user.id });
     res.json({ items });
   })
 );
@@ -85,6 +88,38 @@ function parseCursor(raw) {
   if (m) return { main: Number(m[1]), quiz: Number(m[2]) };
   const n = Math.max(Number(s) || 0, 0);
   return { main: n, quiz: 0 };
+}
+
+// GOST feed: najviše 5 kartica po oblasti, bez knjiga, bez napretka/saved/seen.
+const GUEST_PER_CAT = 5;
+async function guestFeed({ catIds, seed, cur, limit }) {
+  const offset = cur.main + cur.quiz;
+  const catFilter = catIds.length ? Prisma.sql`AND c."categoryId" IN (${Prisma.join(catIds)})` : Prisma.empty;
+  const capped = Prisma.sql`
+    SELECT c.id, ROW_NUMBER() OVER (PARTITION BY c."categoryId" ORDER BY md5(c.id::text || ${seed})) AS rn
+    FROM "Card" c JOIN "Category" cat ON cat.id = c."categoryId"
+    WHERE c."isActive" = true AND cat."isActive" = true AND c."bookId" IS NULL ${catFilter}`;
+  const [rows, cnt] = await Promise.all([
+    prisma.$queryRaw`SELECT id FROM (${capped}) t WHERE t.rn <= ${GUEST_PER_CAT} ORDER BY md5(t.id::text || ${seed}) OFFSET ${offset} LIMIT ${limit}`,
+    prisma.$queryRaw`SELECT COUNT(*)::int AS n FROM (${capped}) t WHERE t.rn <= ${GUEST_PER_CAT}`,
+  ]);
+  const ids = rows.map((r) => r.id);
+  const total = cnt[0]?.n ?? 0;
+  const cards = await prisma.card.findMany({
+    where: { id: { in: ids } },
+    include: {
+      category: { select: { id: true, key: true, label: true, color: true, icon: true } },
+      book: { select: { id: true, title: true, author: true } },
+    },
+  });
+  const byId = new Map(cards.map((c) => [c.id, c]));
+  const items = ids
+    .filter((id) => byId.has(id))
+    .map((id) => {
+      const c = byId.get(id);
+      return { id: c.id, type: c.type, title: c.title, text: c.text, quiz: c.quiz, source: c.source, sourceRef: c.sourceRef, category: c.category, book: c.book, saved: false, seen: false };
+    });
+  return { items, nextCursor: `${offset + items.length}-0`, hasMore: items.length === limit && offset + items.length < total, total, guest: true };
 }
 
 /**
@@ -113,6 +148,10 @@ router.get(
       if (!Number.isNaN(d.getTime())) since = d;
     }
 
+    // GOST: ograničen pregled (5 po oblasti, bez knjiga, bez napretka)
+    if (!req.user) return res.json(await guestFeed({ catIds, seed, cur, limit }));
+    const userId = req.user.id;
+
     const conds = [Prisma.sql`c."isActive" = true`, Prisma.sql`cat."isActive" = true`];
     if (catIds.length) conds.push(Prisma.sql`c."categoryId" IN (${Prisma.join(catIds)})`);
     if (filter === 'saved') conds.push(Prisma.sql`sv."cardId" IS NOT NULL`);
@@ -130,8 +169,8 @@ router.get(
       const rows = await prisma.$queryRaw`
         SELECT c.id FROM "Card" c
         JOIN "Category" cat ON cat.id = c."categoryId"
-        LEFT JOIN "SeenCard" sn ON sn."cardId" = c.id
-        LEFT JOIN "SavedCard" sv ON sv."cardId" = c.id
+        LEFT JOIN "SeenCard" sn ON sn."cardId" = c.id AND sn."userId" = ${userId}
+        LEFT JOIN "SavedCard" sv ON sv."cardId" = c.id AND sv."userId" = ${userId}
         WHERE ${baseWhere} AND ${typeCond}
         ORDER BY ${unseenExpr} DESC, md5(c.id::text || ${seed})
         OFFSET ${offset} LIMIT ${take}`;
@@ -141,7 +180,7 @@ router.get(
       const rows = await prisma.$queryRaw`
         SELECT COUNT(*)::int AS n FROM "Card" c
         JOIN "Category" cat ON cat.id = c."categoryId"
-        LEFT JOIN "SavedCard" sv ON sv."cardId" = c.id
+        LEFT JOIN "SavedCard" sv ON sv."cardId" = c.id AND sv."userId" = ${userId}
         WHERE ${baseWhere} AND ${typeCond}`;
       return rows[0]?.n ?? 0;
     };
@@ -160,13 +199,13 @@ router.get(
       const cRows = await prisma.$queryRaw`
         SELECT COUNT(*)::int AS n FROM "Card" c
         JOIN "Category" cat ON cat.id = c."categoryId"
-        JOIN "ReviewState" rv ON rv."cardId" = c.id
+        JOIN "ReviewState" rv ON rv."cardId" = c.id AND rv."userId" = ${userId}
         WHERE ${baseWhere} AND rv."dueAt" <= NOW()`;
       total = cRows[0]?.n ?? 0;
       const rows = await prisma.$queryRaw`
         SELECT c.id FROM "Card" c
         JOIN "Category" cat ON cat.id = c."categoryId"
-        JOIN "ReviewState" rv ON rv."cardId" = c.id
+        JOIN "ReviewState" rv ON rv."cardId" = c.id AND rv."userId" = ${userId}
         WHERE ${baseWhere} AND rv."dueAt" <= NOW()
         ORDER BY rv."dueAt" ASC
         OFFSET ${offset} LIMIT ${limit}`;
@@ -210,8 +249,8 @@ router.get(
       include: {
         category: { select: { id: true, key: true, label: true, color: true, icon: true } },
         book: { select: { id: true, title: true, author: true } },
-        saved: true,
-        seen: true,
+        saved: { where: { userId } },
+        seen: { where: { userId } },
       },
     });
     const byId = new Map(cards.map((c) => [c.id, c]));
@@ -229,8 +268,8 @@ router.get(
           sourceRef: c.sourceRef,
           category: c.category,
           book: c.book,
-          saved: Boolean(c.saved),
-          seen: Boolean(c.seen),
+          saved: c.saved.length > 0,
+          seen: c.seen.length > 0,
         };
       });
 

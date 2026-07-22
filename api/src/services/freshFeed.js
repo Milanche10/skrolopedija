@@ -11,7 +11,7 @@ let counter = 0;
  * i izbegava naslove koji već postoje ili su nedavno viđeni (`avoid`).
  * Na svaku grešku / iscrpljen AI limit vraća [] — feed nastavlja sa postojećim karticama.
  */
-export async function generateFreshCards({ categoryIds = [], count = 4, avoid = [], wow = false }) {
+export async function generateFreshCards({ categoryIds = [], count = 4, avoid = [], wow = false, userId = null }) {
   if (!hasAI()) return [];
   const where = { isActive: true, key: { not: 'knjige' } };
   if (categoryIds.length) where.id = { in: categoryIds.filter((n) => Number.isInteger(n) && n > 0) };
@@ -19,7 +19,7 @@ export async function generateFreshCards({ categoryIds = [], count = 4, avoid = 
   if (!pool.length) return [];
 
   // adaptivno: kategorije koje korisnik slabije zna dobijaju veću šansu
-  const weights = await categoryWeights();
+  const weights = await categoryWeights(userId);
   const cat = weightedPick(pool, (c) => weights.get(c.id) ?? 1);
   const existing = await prisma.card.findMany({ where: { categoryId: cat.id }, select: { title: true } });
   const avoidTitles = [...existing.map((c) => c.title), ...avoid].slice(-250);

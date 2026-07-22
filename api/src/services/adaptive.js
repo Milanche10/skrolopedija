@@ -5,9 +5,10 @@ import { prisma } from '../lib/prisma.js';
  * (više „ne razumem" / pogrešnih kvizova) → generiši/prikaži je češće.
  * Bazira se na CardSignal zapisima (swipe + kviz signali).
  */
-export async function categoryWeights() {
+export async function categoryWeights(userId) {
   const rows = await prisma.cardSignal.groupBy({
     by: ['categoryId', 'kind'],
+    where: userId ? { userId } : undefined,
     _count: { _all: true },
   });
   const w = new Map();

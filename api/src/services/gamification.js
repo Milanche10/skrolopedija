@@ -33,14 +33,14 @@ export function xpFrom({ seen, quizCorrect, saved, streak }) {
   return seen * 2 + quizCorrect * 10 + saved * 5 + streak * 20;
 }
 
-export async function computeStats() {
-  const state = await prisma.userState.findUnique({ where: { id: 1 } });
+export async function computeStats(userId) {
+  const state = await prisma.userState.findUnique({ where: { userId } });
   const streak = state?.streakCount || 0;
   const [seen, saved, quizTotal, quizCorrect] = await Promise.all([
-    prisma.seenCard.count(),
-    prisma.savedCard.count(),
-    prisma.quizAnswer.count(),
-    prisma.quizAnswer.count({ where: { correct: true } }),
+    prisma.seenCard.count({ where: { userId } }),
+    prisma.savedCard.count({ where: { userId } }),
+    prisma.quizAnswer.count({ where: { userId } }),
+    prisma.quizAnswer.count({ where: { userId, correct: true } }),
   ]);
 
   const xp = xpFrom({ seen, quizCorrect, saved, streak });
@@ -52,7 +52,7 @@ export async function computeStats() {
     cats.map(async (c) => {
       const [total, seenInCat] = await Promise.all([
         prisma.card.count({ where: { categoryId: c.id, isActive: true } }),
-        prisma.seenCard.count({ where: { card: { categoryId: c.id } } }),
+        prisma.seenCard.count({ where: { userId, card: { categoryId: c.id } } }),
       ]);
       const shown = Math.min(seenInCat, total || seenInCat);
       return {

@@ -4,14 +4,16 @@ import { prisma } from '../lib/prisma.js';
 import { HttpError, asyncHandler, requireFields, intParam } from '../lib/errors.js';
 import { explainCard } from '../services/cardGen.js';
 import { updateReview } from '../services/review.js';
+import { requireUser, requireAdmin } from '../lib/auth.js';
 
 const router = Router();
 
 const EXPLAIN_MODES = ['eli10', 'example', 'deeper'];
 
-// AI objašnjenje kartice (jednostavno / primer iz života / dublje).
+// AI objašnjenje kartice (jednostavno / primer iz života / dublje) — prijavljeni.
 router.post(
   '/explain',
+  requireUser,
   asyncHandler(async (req, res) => {
     requireFields(req.body, ['title', 'text']);
     const mode = EXPLAIN_MODES.includes(req.body.mode) ? req.body.mode : 'eli10';
@@ -89,6 +91,7 @@ router.get(
 
 router.post(
   '/',
+  requireAdmin,
   asyncHandler(async (req, res) => {
     requireFields(req.body, ['categoryId', 'title']);
     const type = req.body.type || 'lesson';
@@ -117,6 +120,7 @@ router.post(
 
 router.put(
   '/:id',
+  requireAdmin,
   asyncHandler(async (req, res) => {
     const id = intParam(req.params.id, 'id');
     if (req.body.type && !TYPES.includes(req.body.type)) {
@@ -149,6 +153,7 @@ router.put(
 
 router.delete(
   '/:id',
+  requireAdmin,
   asyncHandler(async (req, res) => {
     const id = intParam(req.params.id, 'id');
     try {
@@ -161,19 +166,20 @@ router.delete(
   })
 );
 
-// --- akcije korisnika na kartici ---
+// --- akcije korisnika na kartici (sve traže prijavu — gost nema napredak) ---
 
 // Adaptivni signal: swipe desno = "know", levo = "dont_know", prolaz = "skip".
 const SIGNAL_KINDS = ['know', 'dont_know', 'skip'];
 router.post(
   '/signal',
+  requireUser,
   asyncHandler(async (req, res) => {
     const kind = String(req.body?.kind);
     if (!SIGNAL_KINDS.includes(kind)) throw new HttpError(400, `kind mora biti: ${SIGNAL_KINDS.join(', ')}`);
     const categoryId = intParam(req.body?.categoryId, 'categoryId');
     const dwellMs = Math.max(0, Math.min(Number(req.body?.dwellMs) || 0, 600000));
     const cardId = Number.isInteger(req.body?.cardId) ? req.body.cardId : null;
-    await prisma.cardSignal.create({ data: { cardId, categoryId, kind, dwellMs } });
+    await prisma.cardSignal.create({ data: { userId: req.user.id, cardId, categoryId, kind, dwellMs } });
     res.json({ ok: true });
   })
 );
@@ -181,6 +187,7 @@ router.post(
 // Sačuvaj EFEMERNU (AI-generisanu, još neupisanu) karticu — tek sada ide u bazu.
 router.post(
   '/save-new',
+  requireUser,
   asyncHandler(async (req, res) => {
     requireFields(req.body, ['categoryId', 'title']);
     const categoryId = intParam(req.body.categoryId, 'categoryId');
@@ -204,60 +211,77 @@ router.post(
         },
       });
     }
-    await prisma.savedCard.upsert({ where: { cardId: card.id }, update: {}, create: { cardId: card.id } });
+    await prisma.savedCard.upsert({
+      where: { userId_cardId: { userId: req.user.id, cardId: card.id } },
+      update: {},
+      create: { userId: req.user.id, cardId: card.id },
+    });
     res.status(201).json({ saved: true, card });
   })
 );
 
 router.post(
   '/:id/save',
+  requireUser,
   asyncHandler(async (req, res) => {
     const cardId = intParam(req.params.id, 'id');
     const card = await prisma.card.findUnique({ where: { id: cardId } });
     if (!card) throw new HttpError(404, 'Kartica ne postoji');
-    await prisma.savedCard.upsert({ where: { cardId }, update: {}, create: { cardId } });
+    await prisma.savedCard.upsert({
+      where: { userId_cardId: { userId: req.user.id, cardId } },
+      update: {},
+      create: { userId: req.user.id, cardId },
+    });
     res.json({ saved: true });
   })
 );
 
 router.delete(
   '/:id/save',
+  requireUser,
   asyncHandler(async (req, res) => {
     const cardId = intParam(req.params.id, 'id');
-    await prisma.savedCard.deleteMany({ where: { cardId } });
+    await prisma.savedCard.deleteMany({ where: { userId: req.user.id, cardId } });
     res.json({ saved: false });
   })
 );
 
 router.post(
   '/:id/seen',
+  requireUser,
   asyncHandler(async (req, res) => {
     const cardId = intParam(req.params.id, 'id');
     const card = await prisma.card.findUnique({ where: { id: cardId } });
     if (!card) throw new HttpError(404, 'Kartica ne postoji');
-    await prisma.seenCard.upsert({ where: { cardId }, update: { seenAt: new Date() }, create: { cardId } });
+    await prisma.seenCard.upsert({
+      where: { userId_cardId: { userId: req.user.id, cardId } },
+      update: { seenAt: new Date() },
+      create: { userId: req.user.id, cardId },
+    });
     res.json({ seen: true });
   })
 );
 
 router.post(
   '/:id/quiz-answer',
+  requireUser,
   asyncHandler(async (req, res) => {
+    const uid = req.user.id;
     const cardId = intParam(req.params.id, 'id');
     if (typeof req.body?.correct !== 'boolean') throw new HttpError(400, 'correct mora biti boolean');
     const card = await prisma.card.findUnique({ where: { id: cardId } });
     if (!card) throw new HttpError(404, 'Kartica ne postoji');
     if (card.type !== 'quiz') throw new HttpError(400, 'Kartica nije kviz');
-    await prisma.quizAnswer.create({ data: { cardId, correct: req.body.correct } });
+    await prisma.quizAnswer.create({ data: { userId: uid, cardId, correct: req.body.correct } });
     // pogrešan/tačan kviz je i adaptivni signal za tu kategoriju
     await prisma.cardSignal.create({
-      data: { cardId, categoryId: card.categoryId, kind: req.body.correct ? 'know' : 'dont_know', dwellMs: 0 },
+      data: { userId: uid, cardId, categoryId: card.categoryId, kind: req.body.correct ? 'know' : 'dont_know', dwellMs: 0 },
     });
     // spaced repetition: zakaži sledeće ponavljanje ovog kviza
-    await updateReview(cardId, req.body.correct);
+    await updateReview(uid, cardId, req.body.correct);
     const [total, correct] = await Promise.all([
-      prisma.quizAnswer.count(),
-      prisma.quizAnswer.count({ where: { correct: true } }),
+      prisma.quizAnswer.count({ where: { userId: uid } }),
+      prisma.quizAnswer.count({ where: { userId: uid, correct: true } }),
     ]);
     res.json({ ok: true, stats: { total, correct } });
   })
