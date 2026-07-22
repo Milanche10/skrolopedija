@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { prisma } from '../lib/prisma.js';
 import { asyncHandler, HttpError, intParam } from '../lib/errors.js';
-import { publicUser } from '../lib/auth.js';
+import { publicUser, ROLES, roleRank, hasRole } from '../lib/auth.js';
 
 // Sve rute ovde su već zaštićene requireAdmin (u app.js).
 const router = Router();
@@ -10,17 +10,21 @@ const router = Router();
 router.get(
   '/dashboard',
   asyncHandler(async (req, res) => {
-    const [users, paidUsers, admins, cards, categories, books, quizzes, signals, answers] = await Promise.all([
+    const weekAgo = new Date(Date.now() - 7 * 86400000);
+    const [users, paidUsers, admins, cards, categories, books, quizzes, signals, answers, activeWeekRows] = await Promise.all([
       prisma.user.count(),
       prisma.user.count({ where: { paid: true } }),
-      prisma.user.count({ where: { role: 'admin' } }),
+      prisma.user.count({ where: { role: { in: ['admin', 'superadmin'] } } }),
       prisma.card.count(),
       prisma.category.count(),
       prisma.book.count(),
       prisma.card.count({ where: { type: 'quiz' } }),
       prisma.cardSignal.count(),
       prisma.quizAnswer.count(),
+      // aktivni korisnici (imali signal) u poslednjih 7 dana
+      prisma.cardSignal.findMany({ where: { createdAt: { gte: weekAgo } }, distinct: ['userId'], select: { userId: true } }),
     ]);
+    const activeWeek = activeWeekRows.length;
 
     // kartice po kategoriji (za chart)
     const cats = await prisma.category.findMany({
@@ -40,7 +44,7 @@ router.get(
     const recentUsers = await prisma.user.findMany({ where: { createdAt: { gte: since } }, select: { createdAt: true } });
 
     res.json({
-      totals: { users, paidUsers, admins, cards, categories, books, quizzes, signals, answers },
+      totals: { users, paidUsers, admins, activeWeek, cards, categories, books, quizzes, signals, answers },
       byCategory,
       bySource,
       signups: recentUsers.map((u) => u.createdAt),
@@ -57,24 +61,36 @@ router.get(
   })
 );
 
+// Roleovi koje admin sme da dodeli. Admin-nivo (admin/superadmin) sme SAMO superadmin —
+// da običan admin ne bi mogao da eskalira privilegije sebi ili drugom.
+const ASSIGNABLE = ROLES.filter((r) => r !== 'guest'); // user..superadmin
+
 // Izmena role/paid korisnika
 router.patch(
   '/users/:id',
   asyncHandler(async (req, res) => {
     const id = intParam(req.params.id, 'id');
+    const actorIsSuper = hasRole(req.user, 'superadmin');
+    const target = await prisma.user.findUnique({ where: { id } });
+    if (!target) throw new HttpError(404, 'Korisnik ne postoji');
+
+    // Ne-superadmin ne sme da dira admin/superadmin naloge.
+    if (!actorIsSuper && roleRank(target.role) >= roleRank('admin')) {
+      throw new HttpError(403, 'Samo super admin može menjati admin naloge');
+    }
+
     const data = {};
     if (req.body.role !== undefined) {
-      if (!['user', 'admin'].includes(req.body.role)) throw new HttpError(400, 'role mora biti user ili admin');
+      if (!ASSIGNABLE.includes(req.body.role)) throw new HttpError(400, `role mora biti: ${ASSIGNABLE.join(', ')}`);
+      // dodela admin-nivoa je rezervisana za superadmina
+      if (!actorIsSuper && roleRank(req.body.role) >= roleRank('admin')) {
+        throw new HttpError(403, 'Samo super admin može dodeliti admin/superadmin rolu');
+      }
       data.role = req.body.role;
     }
     if (req.body.paid !== undefined) data.paid = Boolean(req.body.paid);
-    try {
-      const user = await prisma.user.update({ where: { id }, data });
-      res.json(publicUser(user));
-    } catch (err) {
-      if (err.code === 'P2025') throw new HttpError(404, 'Korisnik ne postoji');
-      throw err;
-    }
+    const user = await prisma.user.update({ where: { id }, data });
+    res.json(publicUser(user));
   })
 );
 
@@ -83,10 +99,13 @@ router.delete(
   asyncHandler(async (req, res) => {
     const id = intParam(req.params.id, 'id');
     if (id === req.user.id) throw new HttpError(400, 'Ne možeš obrisati sopstveni nalog');
-    await prisma.user.delete({ where: { id } }).catch((err) => {
-      if (err.code === 'P2025') throw new HttpError(404, 'Korisnik ne postoji');
-      throw err;
-    });
+    const target = await prisma.user.findUnique({ where: { id } });
+    if (!target) throw new HttpError(404, 'Korisnik ne postoji');
+    // admin/superadmin nalog sme da obriše samo superadmin
+    if (roleRank(target.role) >= roleRank('admin') && !hasRole(req.user, 'superadmin')) {
+      throw new HttpError(403, 'Samo super admin može obrisati admin nalog');
+    }
+    await prisma.user.delete({ where: { id } });
     res.json({ ok: true });
   })
 );

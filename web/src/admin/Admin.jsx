@@ -1,12 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api.js';
+import Dashboard from './Dashboard.jsx';
+import UsersPanel from './UsersPanel.jsx';
 import CategoriesTable from './CategoriesTable.jsx';
 import CardsTable from './CardsTable.jsx';
 import BooksPanel from './BooksPanel.jsx';
 
 export default function Admin() {
-  const [tab, setTab] = useState('categories');
+  const [tab, setTab] = useState('dashboard');
   const [categories, setCategories] = useState([]);
   const [aiReady, setAiReady] = useState(true);
   const [aiInfo, setAiInfo] = useState(null);
@@ -51,6 +53,12 @@ export default function Admin() {
       <div className="sub">Upravljanje kategorijama, karticama i knjigama. {aiHint}</div>
 
       <div className="tabs">
+        <button className={`tab${tab === 'dashboard' ? ' on' : ''}`} onClick={() => setTab('dashboard')}>
+          📊 Pregled
+        </button>
+        <button className={`tab${tab === 'users' ? ' on' : ''}`} onClick={() => setTab('users')}>
+          👥 Korisnici
+        </button>
         <button className={`tab${tab === 'categories' ? ' on' : ''}`} onClick={() => setTab('categories')}>
           Kategorije
         </button>
@@ -62,6 +70,8 @@ export default function Admin() {
         </button>
       </div>
 
+      {tab === 'dashboard' && <Dashboard />}
+      {tab === 'users' && <UsersPanel onToast={onToast} />}
       {tab === 'categories' && <CategoriesTable categories={categories} reload={reloadCats} onToast={onToast} aiReady={aiReady} aiHint={aiHint} />}
       {tab === 'cards' && <CardsTable categories={categories} onToast={onToast} />}
       {tab === 'books' && <BooksPanel onToast={onToast} aiReady={aiReady} aiHint={aiHint} />}
