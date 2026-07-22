@@ -23,6 +23,7 @@ export default function App() {
   const [pullHint, setPullHint] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [slowLoad, setSlowLoad] = useState(false);
+  const [reviewDue, setReviewDue] = useState(0);
 
   const cursor = useRef('0-0');
   const sessionStart = useRef(new Date().toISOString());
@@ -85,6 +86,7 @@ export default function App() {
         setCategories(cats.filter((c) => c.isActive));
         setSavedIds(new Set(state.savedIds));
         setStreak(visit.count);
+        setReviewDue(state.reviewDue || 0);
         api.stats().then((s) => { levelRef.current = s.level.index; }).catch(() => {});
         if (state.filters && (state.filters.categories?.length || state.filters.filter)) {
           setFilters({ categories: state.filters.categories || [], filter: state.filters.filter || 'all' });
@@ -319,7 +321,14 @@ export default function App() {
               <Link className="icon-btn" to="/profile" aria-label="Profil" style={{ textDecoration: 'none' }}>
                 🏆
               </Link>
-              <button className="icon-btn" onClick={() => setSheetOpen(true)} aria-label="Filteri">
+              <button
+                className="icon-btn"
+                onClick={() => {
+                  api.state().then((s) => setReviewDue(s.reviewDue || 0)).catch(() => {});
+                  setSheetOpen(true);
+                }}
+                aria-label="Filteri"
+              >
                 ☰
               </button>
               <Link className="icon-btn" to="/admin" aria-label="Admin" style={{ textDecoration: 'none' }}>
@@ -343,8 +352,14 @@ export default function App() {
           </div>
         ) : (
           <div className="center-msg">
-            <div style={{ fontSize: 48 }}>🗂️</div>
-            <div>{freshAllowed ? 'AI trenutno nije dostupan za generisanje.' : 'Nema kartica za izabrane filtere.'}</div>
+            <div style={{ fontSize: 48 }}>{filters.filter === 'review' ? '✅' : '🗂️'}</div>
+            <div>
+              {filters.filter === 'review'
+                ? 'Nema kartica za ponavljanje — sve si savladao! Odgovaraj na kvizove pa se vraćaju po rasporedu.'
+                : freshAllowed
+                ? 'AI trenutno nije dostupan za generisanje.'
+                : 'Nema kartica za izabrane filtere.'}
+            </div>
             <button className="preset on" onClick={clearStory}>
               Prikaži sve
             </button>
@@ -386,6 +401,7 @@ export default function App() {
         <FilterSheet
           categories={categories}
           initial={filters}
+          reviewDue={reviewDue}
           onApply={applyFilters}
           onClose={() => setSheetOpen(false)}
         />

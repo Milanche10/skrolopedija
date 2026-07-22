@@ -1,15 +1,16 @@
 import { useState } from 'react';
 
-const PRESETS = [
-  { key: 'all', label: 'Sve' },
-  { key: 'saved', label: 'Sačuvano' },
-  { key: 'books', label: 'Samo knjige' },
-  { key: 'quizzes', label: 'Samo kvizovi' },
-];
-
-export default function FilterSheet({ categories, initial, onApply, onClose }) {
+export default function FilterSheet({ categories, initial, reviewDue = 0, onApply, onClose }) {
   const [selected, setSelected] = useState(new Set(initial.categories));
   const [filter, setFilter] = useState(initial.filter || 'all');
+
+  const presets = [
+    { key: 'all', label: 'Sve' },
+    { key: 'saved', label: 'Sačuvano' },
+    { key: 'review', label: `🔁 Ponavljanje${reviewDue ? ` (${reviewDue})` : ''}` },
+    { key: 'books', label: 'Samo knjige' },
+    { key: 'quizzes', label: 'Samo kvizovi' },
+  ];
 
   function toggleCat(id) {
     const next = new Set(selected);
@@ -24,7 +25,7 @@ export default function FilterSheet({ categories, initial, onApply, onClose }) {
         <div className="grip" />
         <h3>Prikaži</h3>
         <div className="preset-row">
-          {PRESETS.map((p) => (
+          {presets.map((p) => (
             <button key={p.key} className={`preset${filter === p.key ? ' on' : ''}`} onClick={() => setFilter(p.key)}>
               {p.label}
             </button>

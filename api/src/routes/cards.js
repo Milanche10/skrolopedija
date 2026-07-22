@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client';
 import { prisma } from '../lib/prisma.js';
 import { HttpError, asyncHandler, requireFields, intParam } from '../lib/errors.js';
 import { explainCard } from '../services/cardGen.js';
+import { updateReview } from '../services/review.js';
 
 const router = Router();
 
@@ -252,6 +253,8 @@ router.post(
     await prisma.cardSignal.create({
       data: { cardId, categoryId: card.categoryId, kind: req.body.correct ? 'know' : 'dont_know', dwellMs: 0 },
     });
+    // spaced repetition: zakaži sledeće ponavljanje ovog kviza
+    await updateReview(cardId, req.body.correct);
     const [total, correct] = await Promise.all([
       prisma.quizAnswer.count(),
       prisma.quizAnswer.count({ where: { correct: true } }),

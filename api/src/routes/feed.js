@@ -71,7 +71,7 @@ router.post(
 );
 
 const QUIZ_INTERVAL = 9; // svaka 9. kartica je kviz (otprilike 8–10 po specifikaciji)
-const FILTERS = ['all', 'saved', 'books', 'quizzes'];
+const FILTERS = ['all', 'saved', 'books', 'quizzes', 'review'];
 
 /**
  * Kursor je kompozitan ("<mainOffset>-<quizOffset>") jer se dva toka (obične
@@ -154,7 +154,25 @@ router.get(
     let total = 0;
     let nextCursor;
 
-    if (filter === 'quizzes' || filter === 'saved') {
+    if (filter === 'review') {
+      // spaced repetition: kartice na redu za ponavljanje, poređane po roku (dueAt)
+      const offset = cur.main + cur.quiz;
+      const cRows = await prisma.$queryRaw`
+        SELECT COUNT(*)::int AS n FROM "Card" c
+        JOIN "Category" cat ON cat.id = c."categoryId"
+        JOIN "ReviewState" rv ON rv."cardId" = c.id
+        WHERE ${baseWhere} AND rv."dueAt" <= NOW()`;
+      total = cRows[0]?.n ?? 0;
+      const rows = await prisma.$queryRaw`
+        SELECT c.id FROM "Card" c
+        JOIN "Category" cat ON cat.id = c."categoryId"
+        JOIN "ReviewState" rv ON rv."cardId" = c.id
+        WHERE ${baseWhere} AND rv."dueAt" <= NOW()
+        ORDER BY rv."dueAt" ASC
+        OFFSET ${offset} LIMIT ${limit}`;
+      orderedIds = rows.map((r) => r.id);
+      nextCursor = `${offset + orderedIds.length}-0`;
+    } else if (filter === 'quizzes' || filter === 'saved') {
       // jedan tok, bez ubacivanja
       const cond = filter === 'quizzes' ? quizCond : anyCond;
       const offset = cur.main + cur.quiz;

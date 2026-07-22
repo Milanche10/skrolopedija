@@ -55,6 +55,7 @@ model Card {
   saved      SavedCard?
   seen       SeenCard?
   answers    QuizAnswer[]
+  review     ReviewState?
 
   @@index([categoryId, isActive])
   @@index([bookId])
@@ -85,6 +86,20 @@ model QuizAnswer {
   card       Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
   correct    Boolean
   answeredAt DateTime @default(now())
+}
+
+// Spaced repetition (Anki-stil SM-2): raspored ponavljanja po kartici (kvizu).
+model ReviewState {
+  cardId       Int      @id
+  card         Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  ease         Float    @default(2.5)
+  intervalDays Float    @default(0)
+  reps         Int      @default(0)
+  lapses       Int      @default(0)
+  dueAt        DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([dueAt])
 }
 
 // Adaptivni signali: swipe desno = "know", levo = "dont_know", prolaz = "skip".

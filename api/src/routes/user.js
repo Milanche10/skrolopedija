@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { prisma } from '../lib/prisma.js';
 import { asyncHandler } from '../lib/errors.js';
 import { computeStats } from '../services/gamification.js';
+import { dueReviewCount } from '../services/review.js';
 
 const router = Router();
 
@@ -37,11 +38,12 @@ router.get(
   '/state',
   asyncHandler(async (req, res) => {
     const state = await getState();
-    const [savedIds, seenCount, quizTotal, quizCorrect] = await Promise.all([
+    const [savedIds, seenCount, quizTotal, quizCorrect, reviewDue] = await Promise.all([
       prisma.savedCard.findMany({ select: { cardId: true } }),
       prisma.seenCard.count(),
       prisma.quizAnswer.count(),
       prisma.quizAnswer.count({ where: { correct: true } }),
+      dueReviewCount(),
     ]);
     res.json({
       streak: { count: state.streakCount, lastVisit: state.lastVisit },
@@ -49,6 +51,7 @@ router.get(
       savedIds: savedIds.map((s) => s.cardId),
       seenCount,
       quiz: { total: quizTotal, correct: quizCorrect },
+      reviewDue,
     });
   })
 );
