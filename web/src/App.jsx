@@ -4,6 +4,7 @@ import { api } from './api.js';
 import CardView from './components/CardView.jsx';
 import StoriesBar from './components/StoriesBar.jsx';
 import FilterSheet from './components/FilterSheet.jsx';
+import FeedSkeleton from './components/FeedSkeleton.jsx';
 
 const LIMIT = 8;
 const randomSeed = () => Math.random().toString(36).slice(2, 8);
@@ -333,15 +334,7 @@ export default function App() {
       {pullHint && <div className="pull-hint">↓ Pusti da promešaš</div>}
 
       {loading ? (
-        <div className="center-msg">
-          <div className="spinner" />
-          <div>Učitavam feed…</div>
-          {slowLoad && (
-            <div style={{ fontSize: 13, maxWidth: 260 }}>
-              Besplatan server se budi iz stanja mirovanja — samo trenutak (do ~30s prvi put).
-            </div>
-          )}
-        </div>
+        <FeedSkeleton note={slowLoad ? 'Besplatan server se budi iz stanja mirovanja — samo trenutak…' : undefined} />
       ) : items.length === 0 ? (
         generating ? (
           <div className="center-msg">

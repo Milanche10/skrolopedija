@@ -33,10 +33,17 @@ const upload = multer({
 });
 
 function bookView(b) {
+  let fileMissing = false;
+  try {
+    fs.accessSync(b.filePath);
+  } catch {
+    fileMissing = true; // fajl nije na ovom serveru (npr. registrovan lokalno)
+  }
   return {
     ...b,
     progress: b.totalSegments > 0 ? Math.round((b.doneSegments / b.totalSegments) * 100) : 0,
     queued: isQueued(b.id),
+    fileMissing,
   };
 }
 
@@ -111,6 +118,12 @@ router.post(
     if (!book) throw new HttpError(404, 'Knjiga ne postoji');
     if (book.status === 'processing' || isQueued(id)) {
       throw new HttpError(409, 'Knjiga se već obrađuje');
+    }
+    if (!fs.existsSync(book.filePath)) {
+      throw new HttpError(
+        409,
+        'Fajl ove knjige nije na serveru (registrovana je lokalno). Obradi je lokalno u Neon bazu ili dodaj knjigu preko „Upload".'
+      );
     }
     startProcessing(id);
     res.json({ ok: true, message: 'Obrada pokrenuta' });

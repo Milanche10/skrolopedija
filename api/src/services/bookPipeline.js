@@ -28,6 +28,20 @@ export function startProcessing(bookId) {
 export async function processBook(bookId) {
   const book = await prisma.book.findUnique({ where: { id: bookId } });
   if (!book) return;
+  // Fajl možda ne postoji na OVOM serveru (npr. knjiga registrovana lokalno,
+  // a pokrećeš obradu na Renderu) — jasna poruka umesto sirovog ENOENT-a.
+  try {
+    await fs.access(book.filePath);
+  } catch {
+    await prisma.book.update({
+      where: { id: bookId },
+      data: {
+        status: 'failed',
+        error: 'Fajl nije dostupan na ovom serveru. Ova knjiga je registrovana lokalno — obradi je lokalno (DEPLOY.md → „Knjige u produkciju"), ili je dodaj preko dugmeta „Upload".',
+      },
+    });
+    return;
+  }
   await prisma.book.update({
     where: { id: bookId },
     data: { status: 'processing', error: null, doneSegments: 0 },
