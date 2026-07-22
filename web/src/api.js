@@ -42,6 +42,7 @@ export const api = {
   updateCategory: (id, body) => req(`/categories/${id}`, { method: 'PUT', body }),
   deleteCategory: (id) => req(`/categories/${id}`, { method: 'DELETE' }),
   generate: (id, count = 5) => req(`/categories/${id}/generate`, { method: 'POST', body: { count } }),
+  quizzes: (id, count = 5) => req(`/categories/${id}/quizzes`, { method: 'POST', body: { count } }),
   collect: (id, count = 6) => req(`/collect/${id}`, { method: 'POST', body: { count } }),
 
   // kartice

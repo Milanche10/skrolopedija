@@ -353,6 +353,14 @@ button {
   font-weight: 800;
   font-size: 19px;
   letter-spacing: -0.02em;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+.brand-logo {
+  height: 26px;
+  width: auto;
+  filter: brightness(1.35) saturate(1.1);
 }
 .brand span {
   color: var(--accent);
@@ -1229,6 +1237,76 @@ button {
   height: 100%;
   background: var(--accent);
   border-radius: 3px;
+}
+
+/* 🧬 Knowledge DNA */
+.dna-bar {
+  display: flex;
+  height: 20px;
+  border-radius: 10px;
+  overflow: hidden;
+  gap: 2px;
+  background: var(--surface);
+}
+.dna-bar > div {
+  min-width: 4px;
+  transition: width 600ms var(--ease-out);
+}
+.dna-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-top: 12px;
+}
+.dna-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+.dna-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+}
+
+/* 🧬 Brain Genome */
+.genome {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px 16px;
+}
+.gene {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+}
+.gene-code {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  width: 30px;
+}
+.gene-bar {
+  flex: 1;
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+.gene-bar > div {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), oklch(0.72 0.18 200));
+  border-radius: 4px;
+  transition: width 700ms var(--ease-out);
+}
+.gene-score {
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  width: 24px;
+  text-align: right;
 }
 
 /* knowledge heatmap */

@@ -28,7 +28,7 @@ export default function Profile() {
     );
   }
 
-  const { xp, level, totals, achievements, heatmap } = stats;
+  const { xp, level, totals, achievements, heatmap, dna = [], genome = [], curiosity = 0 } = stats;
   const earned = achievements.filter((a) => a.earned).length;
 
   return (
@@ -57,6 +57,49 @@ export default function Profile() {
         <div className="stat-box"><div className="stat-num">🔥 {totals.streak}</div><div className="stat-lbl">dana zaredom</div></div>
         <div className="stat-box"><div className="stat-num">❤️ {totals.saved}</div><div className="stat-lbl">sačuvano</div></div>
       </section>
+
+      {/* 🧬 Knowledge DNA */}
+      {dna.length > 0 && (
+        <>
+          <h2 className="sec-title">🧬 Knowledge DNA</h2>
+          <div className="dna-bar">
+            {dna.map((d) => (
+              <div key={d.label} style={{ width: `${d.pct}%`, background: d.color }} title={`${d.label} ${d.pct}%`} />
+            ))}
+          </div>
+          <div className="dna-legend">
+            {dna.map((d) => (
+              <span key={d.label} className="dna-item">
+                <span className="dna-dot" style={{ background: d.color }} />
+                {d.icon} {d.label} <b>{d.pct}%</b>
+              </span>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* 🧬 Brain Genome */}
+      {genome.length > 0 && (
+        <>
+          <h2 className="sec-title">
+            🧬 Brain Genome <span className="muted">· Radoznalost {curiosity}/100</span>
+          </h2>
+          <div className="genome">
+            {genome.map((g) => (
+              <div key={g.code} className="gene" title={g.label}>
+                <span className="gene-code">{g.code}</span>
+                <div className="gene-bar">
+                  <div style={{ width: `${g.score}%` }} />
+                </div>
+                <span className="gene-score">{String(g.score).padStart(2, '0')}</span>
+              </div>
+            ))}
+          </div>
+          <p className="muted" style={{ fontSize: 12, marginTop: 6 }}>
+            LOG logika · SCI nauka · HIS istorija · SOC društvo · CRE kreativa · CUR radoznalost. Menja se kako učiš.
+          </p>
+        </>
+      )}
 
       {/* Bedževi */}
       <h2 className="sec-title">Bedževi <span className="muted">({earned}/{achievements.length})</span></h2>

@@ -57,6 +57,7 @@ export async function computeStats() {
       const shown = Math.min(seenInCat, total || seenInCat);
       return {
         categoryId: c.id,
+        key: c.key,
         label: c.label,
         color: c.color,
         icon: c.icon,
@@ -94,11 +95,41 @@ export async function computeStats() {
     progressPct: Math.min(100, Math.round((a.cur / a.target) * 100)),
   }));
 
+  // 🧬 Knowledge DNA — raspodela viđenih kartica po oblasti (%)
+  const totalSeenAll = heatmap.reduce((s, h) => s + h.seen, 0) || 1;
+  const dna = heatmap
+    .filter((h) => h.seen > 0)
+    .map((h) => ({ label: h.label, color: h.color, icon: h.icon, pct: Math.round((h.seen / totalSeenAll) * 100) }))
+    .sort((a, b) => b.pct - a.pct)
+    .slice(0, 8);
+
+  // 🧬 Brain Genome — „sekvence" osobina po grupama oblasti
+  const TRAITS = [
+    { code: 'LOG', label: 'Logika', keys: ['programiranje', 'racunarske-mreze', 'vestacka-inteligencija', 'digitalna-forenzika', 'sajber-bezbednost', 'internet'] },
+    { code: 'SCI', label: 'Nauka', keys: ['nauka', 'kosmos', 'ljudsko-telo', 'zivotinje', 'dinosaurusi', 'zdravlje', 'geografija'] },
+    { code: 'HIS', label: 'Istorija', keys: ['istorija', 'mitologija', 'filozofija'] },
+    { code: 'SOC', label: 'Društvo', keys: ['psihologija', 'biznis', 'marketing', 'ekonomija', 'finansije', 'produktivnost'] },
+    { code: 'CRE', label: 'Kreativa', keys: ['umetnost', 'mitologija', 'prezivljavanje'] },
+  ];
+  const seenByKey = Object.fromEntries(heatmap.map((h) => [h.key, h.seen]));
+  const genome = TRAITS.map((t) => {
+    const sum = t.keys.reduce((s, k) => s + (seenByKey[k] || 0), 0);
+    const raw = sum / totalSeenAll; // 0..1 udeo
+    return { code: t.code, label: t.label, score: Math.min(99, Math.round(raw * 150)) };
+  });
+  // CUR — radoznalost: širina istraživanja + aktivnost
+  const breadth = categoriesTouched / Math.max(6, heatmap.length);
+  const curiosity = Math.min(99, Math.round(breadth * 80 + Math.min(19, seen / 8)));
+  genome.push({ code: 'CUR', label: 'Radoznalost', score: curiosity });
+
   return {
     xp,
     level,
     totals: { seen, saved, quizTotal, quizCorrect, streak, accuracy: Math.round(accuracy * 100), categoriesTouched },
     achievements,
     heatmap,
+    dna,
+    genome,
+    curiosity,
   };
 }

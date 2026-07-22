@@ -63,6 +63,19 @@ export default function CategoriesTable({ categories, reload, onToast, aiReady, 
     }
   }
 
+  async function makeQuizzes(id) {
+    setBusy('quiz' + id);
+    try {
+      const r = await api.quizzes(id, 5);
+      onToast(`Kvizovi: dodato ${r.created}`);
+      reload();
+    } catch (e) {
+      onToast(e.message);
+    } finally {
+      setBusy(null);
+    }
+  }
+
   return (
     <div>
       <div className="card-box">
@@ -128,6 +141,9 @@ export default function CategoriesTable({ categories, reload, onToast, aiReady, 
                         </button>
                         <button className="btn" disabled={busy === 'gen' + c.id} onClick={() => generate(c.id)}>
                           {busy === 'gen' + c.id ? '…' : '✨ AI +5'}
+                        </button>
+                        <button className="btn ghost" disabled={busy === 'quiz' + c.id} onClick={() => makeQuizzes(c.id)}>
+                          {busy === 'quiz' + c.id ? '…' : '🧠 Kviz'}
                         </button>
                         <button className="btn ghost" disabled={busy === 'web' + c.id} onClick={() => collect(c.id)}>
                           {busy === 'web' + c.id ? '…' : '🌐 Web'}

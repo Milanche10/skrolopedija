@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1021.13 355.3">
+  <defs>
+    <style>
+      .cls-1 {
+        letter-spacing: -.02em;
+      }
+
+      .cls-2 {
+        font-family: Montserrat-Bold, Montserrat;
+        font-size: 111.41px;
+        font-weight: 700;
+      }
+
+      .cls-2, .cls-3, .cls-4 {
+        fill: #1b5091;
+      }
+
+      .cls-5 {
+        letter-spacing: -.02em;
+      }
+
+      .cls-3 {
+        opacity: .79;
+      }
+
+      .cls-6 {
+        fill: #4a7abe;
+      }
+
+      .cls-7 {
+        fill: #144675;
+      }
+    </style>
+  </defs>
+  <text class="cls-2" transform="translate(276.63 225.8) scale(.9 1)"><tspan class="cls-5" x="0" y="0">Digitalni </tspan><tspan class="cls-1" x="512.01" y="0">Z</tspan><tspan class="cls-5" x="584.2" y="0">enit</tspan></text>
+  <g>
+    <polygon class="cls-6" points="95.44 171.22 152.29 161.4 152.29 83.72 95.44 101.87 95.44 171.22"/>
+    <polygon class="cls-6" points="95.44 197.11 95.44 265.87 152.29 265.87 152.29 189.97 95.44 197.11"/>
+    <polygon class="cls-6" points="34.73 182.23 76.99 175.09 76.99 109.61 34.73 121.52 34.73 182.23"/>
+    <polygon class="cls-6" points="34.73 205.45 76.99 200.09 76.99 266.76 34.73 266.76 34.73 205.45"/>
+    <g>
+      <polygon class="cls-4" points="152.29 208.15 152.29 265.87 121.59 265.87 121.59 280.43 178.43 280.43 178.43 211.98 152.29 208.15"/>
+      <polygon class="cls-3" points="152.29 208.15 121.59 203.65 121.59 265.87 152.29 265.87 152.29 208.15"/>
+    </g>
+    <g>
+      <polygon class="cls-4" points="152.29 109.14 152.29 161.4 121.59 166.7 121.59 175.97 178.43 185.79 178.43 117.63 152.29 109.14"/>
+      <polygon class="cls-3" points="152.29 109.14 121.59 99.18 121.59 166.7 152.29 161.4 152.29 109.14"/>
+    </g>
+    <polygon class="cls-4" points="197.78 216.29 197.78 280.43 239.84 280.43 239.84 220.11 197.78 216.29"/>
+    <polygon class="cls-4" points="197.78 189.16 239.84 198.29 239.84 138.76 197.78 124.48 197.78 189.16"/>
+    <polygon class="cls-7" points="62.06 278.45 97.97 287.97 97.97 309.2 196.79 294.92 110.28 294.92 110.28 278.45 62.06 278.45"/>
+    <polygon class="cls-7" points="98.12 87.47 165.68 63.81 165.68 96.99 214.79 112.77 178.43 89.55 178.43 46.1 98.12 87.47"/>
+  </g>
+</svg>

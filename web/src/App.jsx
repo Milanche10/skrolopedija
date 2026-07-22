@@ -312,6 +312,7 @@ export default function App() {
         <div className="topbar-inner">
           <div className="topbar-row">
             <div className="brand">
+              <img src="/logo-mark.svg" alt="Digitalni Zenit" className="brand-logo" />
               Skrol<span>opedija</span>
             </div>
             <div className="top-actions">

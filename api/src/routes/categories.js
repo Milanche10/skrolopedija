@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { prisma } from '../lib/prisma.js';
 import { HttpError, asyncHandler, requireFields, intParam } from '../lib/errors.js';
-import { generateCategoryCards } from '../services/cardGen.js';
+import { generateCategoryCards, generateCategoryQuizzes } from '../services/cardGen.js';
 import { isDuplicateTitle } from '../services/dedup.js';
 
 const router = Router();
@@ -119,6 +119,33 @@ router.post(
       created.push(
         await prisma.card.create({
           data: { categoryId: id, type: c.type, title: c.title, text: c.text, source: 'ai' },
+        })
+      );
+    }
+    res.status(201).json({ requested: count, created: created.length, cards: created });
+  })
+);
+
+// AI generisanje KVIZ kartica za kategoriju
+router.post(
+  '/:id/quizzes',
+  asyncHandler(async (req, res) => {
+    const id = intParam(req.params.id, 'id');
+    const count = Math.min(Math.max(Number(req.body?.count) || 5, 1), 15);
+    const category = await prisma.category.findUnique({ where: { id } });
+    if (!category) throw new HttpError(404, 'Kategorija ne postoji');
+
+    const existing = await prisma.card.findMany({ where: { categoryId: id }, select: { title: true } });
+    const existingTitles = existing.map((c) => c.title);
+
+    const quizzes = await generateCategoryQuizzes(category, existingTitles, count);
+    const created = [];
+    for (const q of quizzes) {
+      if (isDuplicateTitle(q.title, existingTitles)) continue;
+      existingTitles.push(q.title);
+      created.push(
+        await prisma.card.create({
+          data: { categoryId: id, type: 'quiz', title: q.title, text: '', quiz: q.quiz, source: 'ai' },
         })
       );
     }

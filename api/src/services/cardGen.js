@@ -126,6 +126,24 @@ function technicalGuidance(key) {
 }
 
 /**
+ * Generiši N kviz kartica za kategoriju.
+ */
+export async function generateCategoryQuizzes(category, existingTitles, count = 5) {
+  const system = `Ti si autor kviz pitanja za aplikaciju Skrolopedija. ${QUIZ_RULES}
+- Pitanja su jasna, tačna i edukativna; tačno JEDAN tačan odgovor od 4 ponuđena.
+- Vrati ISKLJUČIVO JSON: {"cards": [ {"title","quiz":{"q","opts","ok","expl"}} ]}.`;
+  const user = `Kategorija: "${category.label}". Napravi ${count} kviz pitanja.
+${technicalGuidance(category.key)}
+Izbegavaj već korišćene naslove: ${existingTitles.slice(0, 80).join('; ') || '(nema)'}`;
+  const raw = await callLLM({ system, user, maxTokens: 4000 });
+  const arr = asCardArray(extractJson(raw));
+  return arr
+    .map((c) => normalizeQuiz(c))
+    .filter(Boolean)
+    .map((q) => ({ title: q.title, quiz: q.quiz }));
+}
+
+/**
  * Iz segmenta knjige izvuci SVE vredne lekcije kao kartice.
  */
 export async function segmentToCards({ bookTitle, author, segmentText, model = GEN_MODEL }) {
