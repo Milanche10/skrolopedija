@@ -9,5 +9,8 @@ COPY api/prisma ./prisma
 RUN npx prisma generate
 COPY api/ .
 EXPOSE 4000
-# Produkcijski start (Render). docker-compose override-uje ovo dev verzijom sa --watch.
-CMD ["sh", "-c", "npx prisma migrate deploy && (node scripts/seed.js || echo 'Seed preskočen — server se ipak pokreće.') && npm start"]
+# Produkcijski start (Render). Seed NE ide na svaki boot (usporava cold-start ~40s i
+# nepotreban je — baza je već popunjena). Pusti ga jednom sa SEED_ON_START=true ako treba.
+# Migrate/seed ne smeju da blokiraju start servera (zato ';' i '|| true'), inače cold Neon
+# obori ceo servis. Za ručni seed: `SEED_ON_START=true` env ili `npm run seed`.
+CMD ["sh", "-c", "npx prisma migrate deploy || echo 'migrate preskočen'; [ \"$SEED_ON_START\" = 'true' ] && (node scripts/seed.js || echo 'seed preskočen'); npm start"]

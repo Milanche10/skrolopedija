@@ -10,7 +10,8 @@ services:
     # Dockerfile je u KORENU repo-a i gradi se iz korenskog konteksta (Render default).
     dockerfilePath: ./Dockerfile
     dockerContext: .
-    dockerCommand: sh -c "npx prisma migrate deploy && (node scripts/seed.js || true) && npm start"
+    # Bez seed-a na svaki boot (usporava cold-start ~40s). Migrate ne blokira start servera.
+    dockerCommand: sh -c "npx prisma migrate deploy || echo migrate-skip; npm start"
     envVars:
       - key: DATABASE_URL
         sync: false # Neon connection string (direktan, sa ?sslmode=require)
@@ -21,7 +22,7 @@ services:
       - key: OPENAI_API_KEY
         sync: false # console.groq.com → API Keys (besplatno)
       - key: OPENAI_MODEL
-        value: llama-3.1-8b-instant
+        value: llama-3.3-70b-versatile
       - key: AUTO_PROCESS_ON_STARTUP
         value: "false"
       - key: PORT

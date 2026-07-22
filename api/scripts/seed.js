@@ -118,6 +118,16 @@ async function seedNewCategories() {
 }
 
 async function main() {
+  // Brzi izlaz ako je baza već popunjena — inače bi seed na SVAKOM cold-startu
+  // radio ~150 upita ka uspavanom Neon-u (~40s) i držao API nedostupnim.
+  // Pusti pun seed sa FORCE_SEED=true.
+  if (!process.env.FORCE_SEED) {
+    const [catCount, cardCount] = await Promise.all([prisma.category.count(), prisma.card.count()]);
+    if (catCount >= 10 && cardCount >= 50) {
+      console.log(`Baza već popunjena (${catCount} kategorija, ${cardCount} kartica) — seed preskočen (FORCE_SEED=true za pun seed).`);
+      return;
+    }
+  }
   await seedPrototype();
   await seedNewCategories();
   // kategorija za kartice iz knjiga mora postojati
