@@ -116,6 +116,8 @@ export const api = {
   // korisnik
   state: () => req('/user/state'),
   stats: () => req('/user/stats'),
+  leaderboard: () => req('/user/leaderboard'),
+  easterEgg: (code) => req('/user/easter-egg', { method: 'POST', body: { code } }),
   visit: () => req('/user/visit', { method: 'POST' }),
   setFilters: (body) => req('/user/filters', { method: 'PUT', body }),
 

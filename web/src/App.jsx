@@ -26,6 +26,7 @@ export default function App() {
   const [generating, setGenerating] = useState(false);
   const [slowLoad, setSlowLoad] = useState(false);
   const [reviewDue, setReviewDue] = useState(0);
+  const [egg, setEgg] = useState(null); // {icon,title,text} — proslava easter egg-a
 
   const cursor = useRef('0-0');
   const sessionStart = useRef(new Date().toISOString());
@@ -81,6 +82,49 @@ export default function App() {
     const t = setTimeout(() => setSlowLoad(true), 5000);
     return () => clearTimeout(t);
   }, [loading]);
+
+  // 🥚 Easter egg-ovi: Konami kod (↑↑↓↓←→←→BA) i kucanje "zenit"/"konami"
+  useEffect(() => {
+    if (!isAuthed) return;
+    const KONAMI = ['up', 'up', 'down', 'down', 'left', 'right', 'left', 'right', 'b', 'a'];
+    const EGG_INFO = {
+      konami: { icon: '🎮', title: 'Konami kod!', text: '30 života ti ne treba — imaš beskonačno znanje. Bedž otključan!' },
+      zenit: { icon: '🛸', title: 'Digitalni Zenit', text: 'Otkrio si tajni Zenit. Skriveni bedž je tvoj!' },
+    };
+    let keys = [];
+    let typed = '';
+    let cooldown = false;
+    async function trigger(code) {
+      if (cooldown) return;
+      cooldown = true;
+      setTimeout(() => (cooldown = false), 1500);
+      try {
+        const r = await api.easterEgg(code);
+        if (r.newlyUnlocked) {
+          setEgg(EGG_INFO[code]);
+          setTimeout(() => setEgg(null), 6000);
+        } else {
+          showToast(`${EGG_INFO[code].icon} Već otključan bedž`, 1800);
+        }
+      } catch {
+        /* nebitno */
+      }
+    }
+    const onKey = (e) => {
+      const map = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right' };
+      const tok = map[e.key] || (e.key.length === 1 ? e.key.toLowerCase() : null);
+      if (!tok) return;
+      keys = [...keys, tok].slice(-KONAMI.length);
+      if (keys.join(',') === KONAMI.join(',')) trigger('konami');
+      if (/^[a-z]$/.test(tok)) {
+        typed = (typed + tok).slice(-8);
+        if (typed.endsWith('zenit')) trigger('zenit');
+        if (typed.endsWith('konami')) trigger('konami');
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isAuthed, showToast]);
 
   // kategorije se učitavaju uvek (i za gosta)
   useEffect(() => {
@@ -338,7 +382,7 @@ export default function App() {
                   <Link className="streak-pill" to="/profile" style={{ textDecoration: 'none', color: 'inherit' }} aria-label="Profil i streak">
                     🔥 {streak}
                   </Link>
-                  <Link className="icon-btn" to="/profile" aria-label="Profil" style={{ textDecoration: 'none' }}>
+                  <Link className="icon-btn" to="/leaderboard" aria-label="Rang lista" style={{ textDecoration: 'none' }}>
                     🏆
                   </Link>
                   <button
@@ -441,6 +485,22 @@ export default function App() {
       )}
 
       {toast && <div className="toast">{toast}</div>}
+
+      {egg && (
+        <div className="egg-overlay" onClick={() => setEgg(null)}>
+          <div className="egg-confetti" aria-hidden>
+            {['🎉', '✨', '🎊', '⭐', '🏆', '🎮', '💫', '🥳', '🎉', '✨', '🎊', '⭐'].map((c, i) => (
+              <span key={i} style={{ left: `${(i * 8.3) % 100}%`, animationDelay: `${(i % 6) * 0.15}s` }}>{c}</span>
+            ))}
+          </div>
+          <div className="egg-card" onClick={(e) => e.stopPropagation()}>
+            <div className="egg-icon">{egg.icon}</div>
+            <div className="egg-title">{egg.title}</div>
+            <div className="egg-text">{egg.text}</div>
+            <button className="egg-close" onClick={() => setEgg(null)}>Super! 🎉</button>
+          </div>
+        </div>
+      )}
     </>
   );
 }

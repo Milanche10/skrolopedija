@@ -34,8 +34,12 @@ export function xpFrom({ seen, quizCorrect, saved, streak }) {
 }
 
 export async function computeStats(userId) {
-  const state = await prisma.userState.findUnique({ where: { userId } });
+  const [state, account] = await Promise.all([
+    prisma.userState.findUnique({ where: { userId } }),
+    prisma.user.findUnique({ where: { id: userId }, select: { flags: true, createdAt: true } }),
+  ]);
   const streak = state?.streakCount || 0;
+  const flags = account?.flags || {};
   const [seen, saved, quizTotal, quizCorrect] = await Promise.all([
     prisma.seenCard.count({ where: { userId } }),
     prisma.savedCard.count({ where: { userId } }),
@@ -72,28 +76,46 @@ export async function computeStats(userId) {
   const bestCat = heatmap.reduce((m, h) => Math.max(m, h.seen), 0);
   const accuracy = quizTotal ? quizCorrect / quizTotal : 0;
 
+  const allCatsN = heatmap.length || 1;
+  const perfectCur = quizTotal >= 30 && quizCorrect === quizTotal ? 100 : 0;
+  // egg(key) → bedž koji se otključava easter-eggom (skriven dok se ne otkrije)
+  const egg = (val) => (flags && flags[val] ? 1 : 0);
   const defs = [
     { key: 'first', icon: '👣', label: 'Prvi korak', desc: 'Pročitaj prvu karticu', cur: seen, target: 1 },
     { key: 'reader100', icon: '📖', label: 'Čitač', desc: '100 pročitanih kartica', cur: seen, target: 100 },
     { key: 'reader500', icon: '📚', label: 'Knjiški moljac', desc: '500 pročitanih kartica', cur: seen, target: 500 },
+    { key: 'reader1000', icon: '📜', label: 'Aleksandrijski svitak', desc: '1000 pročitanih kartica', cur: seen, target: 1000 },
     { key: 'streak7', icon: '🔥', label: 'Nedelja', desc: '7 dana zaredom', cur: streak, target: 7 },
     { key: 'streak30', icon: '🏆', label: 'Mesec discipline', desc: '30 dana zaredom', cur: streak, target: 30 },
+    { key: 'streak100', icon: '💎', label: 'Dijamant volje', desc: '100 dana zaredom', cur: streak, target: 100, hidden: true },
     { key: 'quiz50', icon: '✅', label: 'Kvizolog', desc: '50 tačnih odgovora', cur: quizCorrect, target: 50 },
+    { key: 'quiz200', icon: '🧾', label: 'Kviz automat', desc: '200 tačnih odgovora', cur: quizCorrect, target: 200 },
     { key: 'sharp', icon: '🎯', label: 'Oštar um', desc: '80% tačnosti (min. 20 kvizova)', cur: quizTotal >= 20 ? Math.round(accuracy * 100) : 0, target: 80 },
+    { key: 'perfect', icon: '💯', label: 'Bez greške', desc: '100% tačnosti (min. 30 kvizova)', cur: perfectCur, target: 100, hidden: true },
     { key: 'collector', icon: '❤️', label: 'Kolekcionar', desc: '25 sačuvanih kartica', cur: saved, target: 25 },
+    { key: 'collector100', icon: '🐉', label: 'Zmaj čuvar blaga', desc: '100 sačuvanih kartica', cur: saved, target: 100 },
     { key: 'explorer', icon: '🧭', label: 'Istraživač', desc: 'Zaviri u 10 oblasti', cur: categoriesTouched, target: 10 },
+    { key: 'allcats', icon: '🌍', label: 'Renesansni um', desc: 'Dotakni SVE oblasti', cur: categoriesTouched, target: allCatsN, hidden: true },
     { key: 'catmaster', icon: '🧠', label: 'Ekspert oblasti', desc: '20 kartica u jednoj oblasti', cur: bestCat, target: 20 },
+    { key: 'catmaster50', icon: '🏅', label: 'Gospodar oblasti', desc: '50 kartica u jednoj oblasti', cur: bestCat, target: 50 },
+    // 🥚 Easter egg-ovi (skriveni — otključavaju se tajnim akcijama)
+    { key: 'konami', icon: '🎮', label: 'Konami', desc: '↑↑↓↓←→←→ B A', cur: egg('konami'), target: 1, hidden: true },
+    { key: 'zenit', icon: '🛸', label: 'Digitalni Zenit', desc: 'Otkrio tajnu Zenita', cur: egg('zenit'), target: 1, hidden: true },
   ];
-  const achievements = defs.map((a) => ({
-    key: a.key,
-    icon: a.icon,
-    label: a.label,
-    desc: a.desc,
-    cur: a.cur,
-    target: a.target,
-    earned: a.cur >= a.target,
-    progressPct: Math.min(100, Math.round((a.cur / a.target) * 100)),
-  }));
+  const achievements = defs.map((a) => {
+    const earned = a.cur >= a.target;
+    return {
+      key: a.key,
+      icon: a.icon,
+      label: a.label,
+      desc: a.desc,
+      cur: a.cur,
+      target: a.target,
+      earned,
+      hidden: Boolean(a.hidden) && !earned, // skriveni se otkrivaju tek kad se osvoje
+      progressPct: Math.min(100, Math.round((a.cur / a.target) * 100)),
+    };
+  });
 
   // 🧬 Knowledge DNA — raspodela viđenih kartica po oblasti (%)
   const totalSeenAll = heatmap.reduce((s, h) => s + h.seen, 0) || 1;
@@ -122,14 +144,48 @@ export async function computeStats(userId) {
   const curiosity = Math.min(99, Math.round(breadth * 80 + Math.min(19, seen / 8)));
   genome.push({ code: 'CUR', label: 'Radoznalost', score: curiosity });
 
+  const earnedCount = achievements.filter((a) => a.earned).length;
+
   return {
     xp,
     level,
-    totals: { seen, saved, quizTotal, quizCorrect, streak, accuracy: Math.round(accuracy * 100), categoriesTouched },
+    totals: { seen, saved, quizTotal, quizCorrect, streak, accuracy: Math.round(accuracy * 100), categoriesTouched, badges: earnedCount },
     achievements,
     heatmap,
     dna,
     genome,
     curiosity,
   };
+}
+
+/**
+ * Rang lista svih (ne-gost) korisnika po XP-u. Efikasno: agregati groupBy umesto
+ * pune computeStats po useru. Vraća ceo sortiran niz sa rank-om (baza je mala).
+ */
+export async function leaderboard() {
+  const [users, states, seenG, savedG, correctG] = await Promise.all([
+    prisma.user.findMany({ where: { role: { not: 'guest' } }, select: { id: true, username: true, firstName: true } }),
+    prisma.userState.findMany({ select: { userId: true, streakCount: true } }),
+    prisma.seenCard.groupBy({ by: ['userId'], _count: { _all: true } }),
+    prisma.savedCard.groupBy({ by: ['userId'], _count: { _all: true } }),
+    prisma.quizAnswer.groupBy({ by: ['userId'], where: { correct: true }, _count: { _all: true } }),
+  ]);
+  const streakMap = Object.fromEntries(states.map((s) => [s.userId, s.streakCount || 0]));
+  const seenMap = Object.fromEntries(seenG.map((g) => [g.userId, g._count._all]));
+  const savedMap = Object.fromEntries(savedG.map((g) => [g.userId, g._count._all]));
+  const correctMap = Object.fromEntries(correctG.map((g) => [g.userId, g._count._all]));
+
+  return users
+    .map((u) => {
+      const seen = seenMap[u.id] || 0;
+      const saved = savedMap[u.id] || 0;
+      const quizCorrect = correctMap[u.id] || 0;
+      const streak = streakMap[u.id] || 0;
+      const xp = xpFrom({ seen, quizCorrect, saved, streak });
+      const lvl = levelFor(xp);
+      return { userId: u.id, username: u.username, name: u.firstName || u.username, xp, streak, levelName: lvl.name, levelIcon: lvl.icon };
+    })
+    .filter((r) => r.xp > 0)
+    .sort((a, b) => b.xp - a.xp)
+    .map((r, i) => ({ rank: i + 1, ...r }));
 }

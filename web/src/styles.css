@@ -1908,3 +1908,148 @@ button {
 }
 .u-del:disabled { opacity: 0.35; cursor: default; }
 .u-del:not(:disabled):hover { background: color-mix(in oklab, var(--danger) 14%, transparent); }
+
+/* ---------- LEADERBOARD ---------- */
+.lb-title { margin: 6px 0 2px; font-size: 24px; }
+.lb-sub { font-size: 12px; margin: 0 0 16px; }
+.lb-link {
+  display: inline-block;
+  margin: 4px 0 8px;
+  padding: 10px 16px;
+  border-radius: var(--r-ctl);
+  background: color-mix(in oklab, var(--accent) 14%, var(--surface));
+  border: 1px solid color-mix(in oklab, var(--accent) 34%, var(--line));
+  color: var(--ink);
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 14px;
+}
+.lb-link:hover { background: color-mix(in oklab, var(--accent) 22%, var(--surface)); }
+
+/* podijum top 3 */
+.podium {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  align-items: end;
+  gap: 10px;
+  margin: 8px 0 20px;
+}
+.podium-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card) var(--r-card) 0 0;
+  padding: 14px 6px 0;
+  position: relative;
+}
+.podium-col.p1 { border-color: #f5c518; box-shadow: 0 0 0 1px #f5c518 inset, 0 8px 24px -12px #f5c51888; }
+.podium-col.p2 { border-color: #c0c7d0; }
+.podium-col.p3 { border-color: #cd9b6a; }
+.podium-col.is-me { background: color-mix(in oklab, var(--accent) 12%, var(--surface)); }
+.podium-medal { font-size: 22px; }
+.podium-ava { font-size: 30px; line-height: 1; }
+.podium-name {
+  font-weight: 700;
+  font-size: 13px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.podium-xp { font-size: 12px; color: var(--accent); font-weight: 700; }
+.podium-stand {
+  margin-top: 6px;
+  width: 100%;
+  text-align: center;
+  font-weight: 800;
+  font-size: 20px;
+  color: var(--muted);
+  background: var(--surface-2);
+  border-radius: 8px 8px 0 0;
+  padding: 6px 0;
+}
+.podium-col.p1 .podium-stand { height: 54px; color: #f5c518; }
+.podium-col.p2 .podium-stand { height: 40px; }
+.podium-col.p3 .podium-stand { height: 30px; }
+
+.lb-list { display: flex; flex-direction: column; gap: 7px; }
+.lb-row {
+  display: grid;
+  grid-template-columns: 42px 30px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-ctl);
+  padding: 9px 12px;
+}
+.lb-row.is-me { border-color: var(--accent); background: color-mix(in oklab, var(--accent) 12%, var(--surface)); }
+.lb-rank { font-weight: 800; font-size: 15px; text-align: center; color: var(--muted); }
+.lb-lvl { font-size: 22px; text-align: center; }
+.lb-name { font-weight: 600; font-size: 14px; min-width: 0; }
+.lb-name .u-you { margin-left: 6px; }
+.lb-lvlname { font-size: 11.5px; font-weight: 400; }
+.lb-xp { font-weight: 800; font-size: 15px; color: var(--accent); white-space: nowrap; }
+.lb-xp .muted { font-size: 11px; font-weight: 600; }
+.lb-sep { text-align: center; font-size: 11px; margin: 12px 0 4px; text-transform: uppercase; letter-spacing: 0.08em; }
+.lb-hint { margin-top: 12px; font-size: 13px; }
+
+/* hidden bedž */
+.ach.hidden .ach-icon { opacity: 0.7; }
+.ach.hidden .ach-label { letter-spacing: 0.15em; color: var(--muted); }
+
+/* ---------- EASTER EGG PROSLAVA ---------- */
+.egg-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-toast);
+  display: grid;
+  place-items: center;
+  background: color-mix(in oklab, var(--bg) 78%, transparent);
+  backdrop-filter: blur(3px);
+  animation: egg-fade var(--t-med) var(--ease-out);
+}
+@keyframes egg-fade { from { opacity: 0; } to { opacity: 1; } }
+.egg-confetti { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.egg-confetti span {
+  position: absolute;
+  top: -8%;
+  font-size: 22px;
+  animation: egg-fall 2.4s linear infinite;
+}
+@keyframes egg-fall {
+  0% { transform: translateY(-10vh) rotate(0deg); opacity: 0; }
+  10% { opacity: 1; }
+  100% { transform: translateY(110vh) rotate(360deg); opacity: 0.9; }
+}
+.egg-card {
+  position: relative;
+  text-align: center;
+  background: var(--surface);
+  border: 1px solid color-mix(in oklab, var(--accent) 40%, var(--line));
+  border-radius: 18px;
+  padding: 28px 26px;
+  max-width: 340px;
+  margin: 20px;
+  box-shadow: 0 20px 60px -20px #000a;
+  animation: egg-pop var(--t-med) var(--ease-out);
+}
+@keyframes egg-pop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.egg-icon { font-size: 60px; line-height: 1; animation: egg-bounce 1s var(--ease-out) infinite alternate; }
+@keyframes egg-bounce { to { transform: translateY(-8px); } }
+.egg-title { font-size: 22px; font-weight: 800; margin: 10px 0 6px; }
+.egg-text { font-size: 14px; color: var(--ink-2); margin-bottom: 18px; }
+.egg-close {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border: none;
+  border-radius: var(--r-ctl);
+  padding: 11px 22px;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+}
+.egg-close:hover { filter: brightness(1.08); }

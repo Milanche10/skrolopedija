@@ -6,6 +6,7 @@ import AuthGate from './AuthGate.jsx';
 import App from './App.jsx';
 import Admin from './admin/Admin.jsx';
 import Profile from './Profile.jsx';
+import Leaderboard from './Leaderboard.jsx';
 import './styles.css';
 
 function Root() {
@@ -23,6 +24,7 @@ function Root() {
     <Routes>
       <Route path="/" element={<App />} />
       <Route path="/profile" element={isAuthed ? <Profile /> : <Navigate to="/" replace />} />
+      <Route path="/leaderboard" element={isAuthed ? <Leaderboard /> : <Navigate to="/" replace />} />
       <Route path="/admin" element={isAdmin ? <Admin /> : <Navigate to="/" replace />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

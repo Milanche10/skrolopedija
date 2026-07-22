@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import { prisma } from '../lib/prisma.js';
-import { asyncHandler } from '../lib/errors.js';
+import { asyncHandler, HttpError } from '../lib/errors.js';
 import { requireUser } from '../lib/auth.js';
-import { computeStats } from '../services/gamification.js';
+import { computeStats, leaderboard } from '../services/gamification.js';
 import { dueReviewCount } from '../services/review.js';
 
 const router = Router();
@@ -24,6 +24,33 @@ router.get(
   '/stats',
   asyncHandler(async (req, res) => {
     res.json(await computeStats(req.user.id));
+  })
+);
+
+// 🏆 Rang lista — top korisnici po XP-u + moja pozicija
+router.get(
+  '/leaderboard',
+  asyncHandler(async (req, res) => {
+    const board = await leaderboard();
+    const top = board.slice(0, 50);
+    const me = board.find((r) => r.userId === req.user.id) || null;
+    res.json({ top, me, totalRanked: board.length });
+  })
+);
+
+// 🥚 Easter egg — otključaj skriveni bedž (konami, zenit…)
+const EGGS = ['konami', 'zenit'];
+router.post(
+  '/easter-egg',
+  asyncHandler(async (req, res) => {
+    const code = String(req.body?.code || '').toLowerCase();
+    if (!EGGS.includes(code)) throw new HttpError(400, 'Nepoznat easter egg');
+    const user = await prisma.user.findUnique({ where: { id: req.user.id }, select: { flags: true } });
+    const flags = { ...(user?.flags || {}) };
+    const already = Boolean(flags[code]);
+    flags[code] = true;
+    if (!already) await prisma.user.update({ where: { id: req.user.id }, data: { flags } });
+    res.json({ ok: true, code, newlyUnlocked: !already });
   })
 );
 

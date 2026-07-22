@@ -61,6 +61,8 @@ export default function Profile() {
         <div className="stat-box"><div className="stat-num">❤️ {totals.saved}</div><div className="stat-lbl">sačuvano</div></div>
       </section>
 
+      <Link to="/leaderboard" className="lb-link">🏆 Vidi rang listu →</Link>
+
       {/* 🧬 Knowledge DNA */}
       {dna.length > 0 && (
         <>
@@ -108,11 +110,11 @@ export default function Profile() {
       <h2 className="sec-title">Bedževi <span className="muted">({earned}/{achievements.length})</span></h2>
       <section className="ach-grid">
         {achievements.map((a) => (
-          <div key={a.key} className={`ach${a.earned ? ' on' : ''}`} title={a.desc}>
-            <div className="ach-icon">{a.earned ? a.icon : '🔒'}</div>
-            <div className="ach-label">{a.label}</div>
-            <div className="ach-desc muted">{a.desc}</div>
-            {!a.earned && (
+          <div key={a.key} className={`ach${a.earned ? ' on' : ''}${a.hidden ? ' hidden' : ''}`} title={a.hidden ? 'Skriveni bedž' : a.desc}>
+            <div className="ach-icon">{a.earned ? a.icon : a.hidden ? '❓' : '🔒'}</div>
+            <div className="ach-label">{a.hidden ? '???' : a.label}</div>
+            <div className="ach-desc muted">{a.hidden ? 'Skriveni bedž — otkrij ga sam!' : a.desc}</div>
+            {!a.earned && !a.hidden && (
               <div className="ach-bar">
                 <div style={{ width: `${a.progressPct}%` }} />
               </div>
