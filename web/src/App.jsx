@@ -111,6 +111,9 @@ export default function App() {
       }
     }
     const onKey = (e) => {
+      // ne ometaj kucanje u poljima (username, pretraga, lozinka…)
+      const el = e.target;
+      if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.isContentEditable)) return;
       const map = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right' };
       const tok = map[e.key] || (e.key.length === 1 ? e.key.toLowerCase() : null);
       if (!tok) return;
