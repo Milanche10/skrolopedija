@@ -2,7 +2,21 @@ import crypto from 'crypto';
 import { prisma } from './prisma.js';
 
 // Bez eksternih zavisnosti — Node ugrađeni crypto (scrypt za lozinke, HMAC-SHA256 JWT).
-const JWT_SECRET = process.env.JWT_SECRET || 'skrolopedija-dev-secret-change-me';
+// Tajni ključ za JWT:
+//  1) JWT_SECRET env (preporučeno — postavi u Render dashboard-u), inače
+//  2) izvedi STABILAN ključ iz DATABASE_URL (tajna koja POSTOJI u prod env-u, a NIJE u
+//     javnom repo-u) — tako se poznati dev-default NIKAD ne koristi na deployu, i tokeni
+//     preživljavaju restart (DATABASE_URL se ne menja). Menja se samo ako rotiraš DB lozinku.
+//  3) tek ako nema ni DATABASE_URL (čist lokalni dev bez baze) → fiksni dev string.
+function resolveJwtSecret() {
+  if (process.env.JWT_SECRET) return process.env.JWT_SECRET;
+  if (process.env.DATABASE_URL) {
+    return crypto.createHmac('sha256', 'skrolopedija/jwt/v1').update(process.env.DATABASE_URL).digest('hex');
+  }
+  console.warn('[auth] Ni JWT_SECRET ni DATABASE_URL nisu postavljeni — koristim nesiguran dev ključ.');
+  return 'skrolopedija-dev-secret-change-me';
+}
+const JWT_SECRET = resolveJwtSecret();
 const TOKEN_TTL_SEC = 60 * 60 * 24 * 30; // 30 dana
 
 // ---- Lozinke: scrypt (memorijski-tvrd) sa nasumičnom soli ----
