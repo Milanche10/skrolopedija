@@ -21,6 +21,7 @@ export default function App() {
   const [toast, setToast] = useState(null);
   const [pullHint, setPullHint] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [slowLoad, setSlowLoad] = useState(false);
 
   const cursor = useRef('0-0');
   const sessionStart = useRef(new Date().toISOString());
@@ -67,6 +68,13 @@ export default function App() {
     setToast(msg);
     setTimeout(() => setToast(null), ms);
   }, []);
+
+  // ako se učitavanje oduži (Render se budi), pokaži poruku umesto praznog ekrana
+  useEffect(() => {
+    if (!loading) return setSlowLoad(false);
+    const t = setTimeout(() => setSlowLoad(true), 5000);
+    return () => clearTimeout(t);
+  }, [loading]);
 
   // početno učitavanje: kategorije, korisničko stanje, streak
   useEffect(() => {
@@ -328,6 +336,11 @@ export default function App() {
         <div className="center-msg">
           <div className="spinner" />
           <div>Učitavam feed…</div>
+          {slowLoad && (
+            <div style={{ fontSize: 13, maxWidth: 260 }}>
+              Besplatan server se budi iz stanja mirovanja — samo trenutak (do ~30s prvi put).
+            </div>
+          )}
         </div>
       ) : items.length === 0 ? (
         generating ? (
