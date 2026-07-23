@@ -71,6 +71,28 @@ export const roleRank = (role) => RANK[role] ?? 0;
 /** Da li korisnik ima BAR zadati nivo (npr. hasRole(u,'admin') → admin ili superadmin). */
 export const hasRole = (user, min) => roleRank(user?.role) >= (RANK[min] ?? 99);
 
+// ---- Vidljivost kategorija po roli ----
+// Obični korisnici (user/premium) i gosti vide samo ovih 12 oblasti.
+// Moderator/admin/superadmin vide SVE kategorije lekcija.
+export const USER_CATEGORY_KEYS = [
+  'internet',
+  'sajber-bezbednost',
+  'digitalna-forenzika',
+  'racunarske-mreze',
+  'biznis',
+  'marketing',
+  'programiranje',
+  'vestacka-inteligencija',
+  'ekonomija',
+  'finansije',
+  'nauka',
+  'produktivnost',
+];
+/** null = sve kategorije (moderator+); inače lista dozvoljenih `key`-eva. */
+export function allowedCategoryKeys(user) {
+  return hasRole(user, 'moderator') ? null : USER_CATEGORY_KEYS;
+}
+
 /** Javni prikaz korisnika (bez hash-a). tier = pojednostavljen nivo za UI. */
 export function publicUser(u) {
   if (!u) return null;

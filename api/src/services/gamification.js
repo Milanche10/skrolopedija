@@ -1,4 +1,5 @@
 import { prisma } from '../lib/prisma.js';
+import { allowedCategoryKeys } from '../lib/auth.js';
 
 // Nivoi (prag XP-a). XP se računa iz aktivnosti — bez posebne tabele.
 const LEVELS = [
@@ -36,7 +37,7 @@ export function xpFrom({ seen, quizCorrect, saved, streak }) {
 export async function computeStats(userId) {
   const [state, account] = await Promise.all([
     prisma.userState.findUnique({ where: { userId } }),
-    prisma.user.findUnique({ where: { id: userId }, select: { flags: true, createdAt: true } }),
+    prisma.user.findUnique({ where: { id: userId }, select: { flags: true, createdAt: true, role: true } }),
   ]);
   const streak = state?.streakCount || 0;
   const flags = account?.flags || {};
@@ -51,7 +52,11 @@ export async function computeStats(userId) {
   const level = levelFor(xp);
 
   // Knowledge heatmap: po kategoriji viđene / ukupno aktivnih
-  const cats = await prisma.category.findMany({ where: { isActive: true }, orderBy: { sortOrder: 'asc' } });
+  // obični korisnici vide samo svoje dozvoljene oblasti (moderator+ sve)
+  const allowedKeys = allowedCategoryKeys({ role: account?.role });
+  const catWhere = { isActive: true };
+  if (allowedKeys) catWhere.key = { in: allowedKeys };
+  const cats = await prisma.category.findMany({ where: catWhere, orderBy: { sortOrder: 'asc' } });
   const heatmap = await Promise.all(
     cats.map(async (c) => {
       const [total, seenInCat] = await Promise.all([

@@ -5,15 +5,19 @@
    ============================================================ */
 
 :root {
-  /* boje */
-  --bg: oklch(0.13 0.012 285);
-  --surface: oklch(0.18 0.014 285);
-  --surface-2: oklch(0.22 0.016 285);
-  --ink: oklch(0.96 0.005 285);
-  --ink-2: oklch(0.86 0.01 285);
-  --muted: oklch(0.7 0.015 285);
-  --line: oklch(0.3 0.015 285);
-  --accent: oklch(0.62 0.21 295);
+  /* boje — tamna tema sa blagim DZ plavim tonom */
+  --bg: oklch(0.14 0.02 255);
+  --surface: oklch(0.19 0.022 255);
+  --surface-2: oklch(0.23 0.024 255);
+  --ink: oklch(0.96 0.005 255);
+  --ink-2: oklch(0.86 0.01 255);
+  --muted: oklch(0.7 0.015 255);
+  --line: oklch(0.3 0.015 255);
+  /* Digitalni Zenit — plava (brend #1b5091 / #4a7abe) */
+  --accent: oklch(0.6 0.13 254);
+  --accent-2: oklch(0.5 0.12 256);
+  --dz-blue: #1b5091;
+  --dz-blue-2: #4a7abe;
   --accent-ink: #fff;
   --danger: oklch(0.6 0.21 25);
   --ok: oklch(0.7 0.17 155);
@@ -2053,3 +2057,15 @@ button {
   cursor: pointer;
 }
 .egg-close:hover { filter: brightness(1.08); }
+
+/* povratak na sajt sa login ekrana */
+.auth-back {
+  position: absolute;
+  top: 16px;
+  left: 18px;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+}
+.auth-back:hover { color: var(--ink); }

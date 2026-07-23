@@ -14,7 +14,7 @@ export default function Leaderboard() {
     api.leaderboard().then(setData).catch((e) => setErr(e.message));
   }, []);
 
-  if (err) return <div className="profile"><Link className="back" to="/">← Nazad</Link><p className="muted">Greška: {err}</p></div>;
+  if (err) return <div className="profile"><Link className="back" to="/app">← Nazad</Link><p className="muted">Greška: {err}</p></div>;
   if (!data) return <div className="center-msg"><div className="spinner" /><div>Učitavam rang listu…</div></div>;
 
   const { top, me, totalRanked } = data;
@@ -22,7 +22,7 @@ export default function Leaderboard() {
 
   return (
     <div className="profile lb">
-      <Link className="back" to="/">← Nazad na feed</Link>
+      <Link className="back" to="/app">← Nazad na feed</Link>
       <h1 className="lb-title">🏆 Rang lista</h1>
       <p className="muted lb-sub">{totalRanked} aktivnih učenika · XP = pročitano×2 + tačan kviz×10 + sačuvano×5 + streak×20</p>
 

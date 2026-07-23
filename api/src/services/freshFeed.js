@@ -11,9 +11,11 @@ let counter = 0;
  * i izbegava naslove koji već postoje ili su nedavno viđeni (`avoid`).
  * Na svaku grešku / iscrpljen AI limit vraća [] — feed nastavlja sa postojećim karticama.
  */
-export async function generateFreshCards({ categoryIds = [], count = 4, avoid = [], wow = false, userId = null }) {
+export async function generateFreshCards({ categoryIds = [], count = 4, avoid = [], wow = false, userId = null, allowedKeys = null }) {
   if (!hasAI()) return [];
   const where = { isActive: true, key: { not: 'knjige' } };
+  // obični korisnici: generiši samo iz dozvoljenih oblasti (moderator+ → allowedKeys null → sve osim knjiga)
+  if (allowedKeys) where.key = { in: allowedKeys };
   if (categoryIds.length) where.id = { in: categoryIds.filter((n) => Number.isInteger(n) && n > 0) };
   const pool = await prisma.category.findMany({ where });
   if (!pool.length) return [];

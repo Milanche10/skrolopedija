@@ -403,6 +403,9 @@ export default function App() {
                       ⚙️
                     </Link>
                   )}
+                  <button className="icon-btn" onClick={logout} aria-label="Odjava" title="Odjava">
+                    🚪
+                  </button>
                 </>
               ) : (
                 <>

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from './auth.jsx';
 
 export default function AuthGate() {
@@ -35,6 +36,7 @@ export default function AuthGate() {
     <div className="auth-gate">
       <div className="auth-bg" />
       <div className="auth-card">
+        <Link to="/" className="auth-back">← Digitalni Zenit</Link>
         <img src="/logo-full.svg" alt="Digitalni Zenit" className="auth-logo" />
         <h1 className="auth-title">
           Skrol<span>opedija</span>

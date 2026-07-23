@@ -15,7 +15,7 @@ export default function Profile() {
   if (error) {
     return (
       <div className="profile">
-        <Link className="back" to="/">← Nazad na feed</Link>
+        <Link className="back" to="/app">← Nazad na feed</Link>
         <p className="muted">Greška: {error}</p>
       </div>
     );
@@ -34,7 +34,7 @@ export default function Profile() {
 
   return (
     <div className="profile">
-      <Link className="back" to="/">← Nazad na feed</Link>
+      <Link className="back" to="/app">← Nazad na feed</Link>
 
       <AccountSection />
 

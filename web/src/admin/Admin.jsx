@@ -46,7 +46,7 @@ export default function Admin() {
 
   return (
     <div className="admin">
-      <Link className="back" to="/">
+      <Link className="back" to="/app">
         ← Nazad na feed
       </Link>
       <h1>Admin · Skrolopedija</h1>

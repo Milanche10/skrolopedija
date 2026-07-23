@@ -5,7 +5,7 @@ import { asyncHandler, HttpError } from '../lib/errors.js';
 import { generateFreshCards } from '../services/freshFeed.js';
 import { generateDeeperCards } from '../services/cardGen.js';
 import { hasAI } from '../lib/llm.js';
-import { requireUser } from '../lib/auth.js';
+import { requireUser, allowedCategoryKeys } from '../lib/auth.js';
 
 const router = Router();
 
@@ -68,7 +68,8 @@ router.post(
     const avoid = Array.isArray(req.body?.avoid) ? req.body.avoid.map(String).slice(0, 120) : [];
     const wow = Boolean(req.body?.wow);
     if (!req.user) return res.json({ items: [] }); // gost ne generiše (štednja)
-    const items = await generateFreshCards({ categoryIds: categories, count, avoid, wow, userId: req.user.id });
+    const allowedKeys = allowedCategoryKeys(req.user);
+    const items = await generateFreshCards({ categoryIds: categories, count, avoid, wow, userId: req.user.id, allowedKeys });
     res.json({ items });
   })
 );
@@ -92,13 +93,15 @@ function parseCursor(raw) {
 
 // GOST feed: najviše 5 kartica po oblasti, bez knjiga, bez napretka/saved/seen.
 const GUEST_PER_CAT = 5;
-async function guestFeed({ catIds, seed, cur, limit }) {
+async function guestFeed({ catIds, seed, cur, limit, allowedKeys }) {
   const offset = cur.main + cur.quiz;
   const catFilter = catIds.length ? Prisma.sql`AND c."categoryId" IN (${Prisma.join(catIds)})` : Prisma.empty;
+  // gost vidi samo dozvoljene oblasti (kao i običan korisnik)
+  const keyFilter = allowedKeys ? Prisma.sql`AND cat."key" IN (${Prisma.join(allowedKeys)})` : Prisma.empty;
   const capped = Prisma.sql`
     SELECT c.id, ROW_NUMBER() OVER (PARTITION BY c."categoryId" ORDER BY md5(c.id::text || ${seed})) AS rn
     FROM "Card" c JOIN "Category" cat ON cat.id = c."categoryId"
-    WHERE c."isActive" = true AND cat."isActive" = true AND c."bookId" IS NULL ${catFilter}`;
+    WHERE c."isActive" = true AND cat."isActive" = true AND c."bookId" IS NULL ${catFilter} ${keyFilter}`;
   const [rows, cnt] = await Promise.all([
     prisma.$queryRaw`SELECT id FROM (${capped}) t WHERE t.rn <= ${GUEST_PER_CAT} ORDER BY md5(t.id::text || ${seed}) OFFSET ${offset} LIMIT ${limit}`,
     prisma.$queryRaw`SELECT COUNT(*)::int AS n FROM (${capped}) t WHERE t.rn <= ${GUEST_PER_CAT}`,
@@ -148,11 +151,15 @@ router.get(
       if (!Number.isNaN(d.getTime())) since = d;
     }
 
+    // vidljivost oblasti: obični korisnici/gosti vide samo dozvoljenih 12; moderator+ sve
+    const allowedKeys = allowedCategoryKeys(req.user);
+
     // GOST: ograničen pregled (5 po oblasti, bez knjiga, bez napretka)
-    if (!req.user) return res.json(await guestFeed({ catIds, seed, cur, limit }));
+    if (!req.user) return res.json(await guestFeed({ catIds, seed, cur, limit, allowedKeys }));
     const userId = req.user.id;
 
     const conds = [Prisma.sql`c."isActive" = true`, Prisma.sql`cat."isActive" = true`];
+    if (allowedKeys) conds.push(Prisma.sql`cat."key" IN (${Prisma.join(allowedKeys)})`);
     if (catIds.length) conds.push(Prisma.sql`c."categoryId" IN (${Prisma.join(catIds)})`);
     if (filter === 'saved') conds.push(Prisma.sql`sv."cardId" IS NOT NULL`);
     if (filter === 'books') conds.push(Prisma.sql`c."bookId" IS NOT NULL`);

@@ -3,7 +3,7 @@ import { prisma } from '../lib/prisma.js';
 import { HttpError, asyncHandler, requireFields, intParam } from '../lib/errors.js';
 import { generateCategoryCards, generateCategoryQuizzes } from '../services/cardGen.js';
 import { isDuplicateTitle } from '../services/dedup.js';
-import { requireAdmin } from '../lib/auth.js';
+import { requireAdmin, allowedCategoryKeys } from '../lib/auth.js';
 
 const router = Router();
 
@@ -23,6 +23,9 @@ router.get(
   '/',
   asyncHandler(async (req, res) => {
     const where = req.query.all === '1' ? {} : { isActive: true };
+    // obični korisnici/gosti vide samo dozvoljene oblasti; moderator+ vide sve
+    const allowed = allowedCategoryKeys(req.user);
+    if (allowed) where.key = { in: allowed };
     const cats = await prisma.category.findMany({
       where,
       orderBy: [{ sortOrder: 'asc' }, { id: 'asc' }],
