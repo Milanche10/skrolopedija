@@ -7,10 +7,11 @@ const NAV = [
   { to: '/', label: 'Početna', end: true },
   { to: '/o-nama', label: 'O nama' },
   { to: '/stubovi', label: 'Naši stubovi' },
+  { to: '/baza-znanja', label: 'Baza znanja' },
   { to: '/partneri', label: 'Partneri' },
+  { to: '/vesti', label: 'Vesti' },
   { to: '/tim', label: 'Tim' },
   { to: '/kontakt', label: 'Kontakt' },
-  { to: '/podrzi', label: 'Podrži' },
 ];
 
 export default function SiteLayout() {
@@ -59,16 +60,27 @@ export default function SiteLayout() {
             </p>
           </div>
           <div>
-            <h4>Navigacija</h4>
-            {NAV.map((n) => (
-              <Link key={n.to} to={n.to}>{n.label}</Link>
-            ))}
+            <h4>Organizacija</h4>
+            <Link to="/o-nama">O nama</Link>
+            <Link to="/stubovi">Naši stubovi</Link>
+            <Link to="/oblasti">Oblasti rada</Link>
+            <Link to="/tim">Tim</Link>
+            <Link to="/vesti">Vesti</Link>
           </div>
           <div>
-            <h4>Aplikacija</h4>
-            <Link to="/app">Skrolpedija — uči dok skroluješ</Link>
-            <Link to="/podrzi">Podrži naš rad</Link>
+            <h4>Saradnja</h4>
+            <Link to="/partneri">Partneri</Link>
+            <Link to="/za-skole">Za škole</Link>
+            <Link to="/za-kompanije">Za kompanije</Link>
+            <Link to="/podrzi">Podrži nas</Link>
+          </div>
+          <div>
+            <h4>Resursi</h4>
+            <Link to="/baza-znanja">Baza znanja</Link>
+            <Link to="/app">Skrolpedija</Link>
             <Link to="/kontakt">Kontakt</Link>
+            <Link to="/privatnost">Politika privatnosti</Link>
+            <Link to="/uslovi">Uslovi korišćenja</Link>
           </div>
         </div>
         <div className="dz-container dz-foot-bottom">

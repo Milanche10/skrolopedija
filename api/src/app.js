@@ -7,6 +7,7 @@ import booksRouter from './routes/books.js';
 import feedRouter from './routes/feed.js';
 import userRouter from './routes/user.js';
 import adminRouter from './routes/admin.js';
+import newsRouter from './routes/news.js';
 import { errorMiddleware, asyncHandler, intParam } from './lib/errors.js';
 import { collectForCategory } from './services/webCollect.js';
 import { hasAI, aiStatus } from './lib/llm.js';
@@ -32,6 +33,7 @@ export function createApp() {
   app.use('/books', requireAdmin, booksRouter);
   app.use('/feed', feedRouter);
   app.use('/user', userRouter);
+  app.use('/news', newsRouter); // javno čitanje; izmena iza requireModerator u ruteru
   app.use('/admin', requireAdmin, adminRouter);
 
   // web-prikupljanje za kategoriju (admin — troši AI)

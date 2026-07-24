@@ -538,8 +538,13 @@ button {
   width: auto;
   filter: brightness(1.35) saturate(1.1);
 }
-.brand span {
+.brand-name {
+  color: var(--ink);
+  font-weight: 800;
+}
+.brand-name b {
   color: var(--accent);
+  font-weight: 800;
 }
 .top-actions {
   display: flex;
@@ -2069,3 +2074,29 @@ button {
   font-weight: 600;
 }
 .auth-back:hover { color: var(--ink); }
+
+/* ---------- ADMIN VESTI ---------- */
+.news-admin { display: flex; flex-direction: column; gap: 20px; }
+.news-form { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+.news-form h3 { margin: 0 0 4px; font-size: 16px; }
+.news-form-row { display: flex; gap: 12px; flex-wrap: wrap; }
+.news-form-row .grow { flex: 1; min-width: 200px; }
+.news-form label { display: flex; flex-direction: column; gap: 5px; font-size: 12.5px; color: var(--muted); font-weight: 600; }
+.news-form input, .news-form textarea, .news-form select {
+  background: var(--bg); border: 1px solid var(--line); border-radius: var(--r-ctl);
+  padding: 10px 12px; color: var(--ink); font-size: 14.5px; font-family: inherit; resize: vertical;
+}
+.news-form input:focus, .news-form textarea:focus, .news-form select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.news-check { flex-direction: row !important; align-items: center; gap: 8px !important; color: var(--ink) !important; font-size: 14px !important; cursor: pointer; }
+.news-check input { width: 18px; height: 18px; accent-color: var(--accent); }
+.news-form-actions { display: flex; gap: 10px; align-items: center; }
+
+.news-list-title { font-size: 15px; margin: 6px 0 0; }
+.news-list { display: flex; flex-direction: column; gap: 8px; }
+.news-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-ctl); padding: 10px 14px; }
+.news-item.draft { opacity: 0.6; }
+.news-item-main { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.news-item-cat { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--accent); background: color-mix(in oklab, var(--accent) 14%, transparent); padding: 3px 8px; border-radius: 999px; flex: none; }
+.news-item-title { font-weight: 600; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.news-item-draft { font-size: 10px; font-weight: 700; color: var(--muted); border: 1px solid var(--line); padding: 2px 6px; border-radius: 999px; flex: none; }
+.news-item-actions { display: flex; gap: 6px; flex: none; }

@@ -153,3 +153,19 @@ model CardSignal {
   @@index([userId, categoryId])
   @@index([createdAt])
 }
+
+// Vesti / objave — uređuje se preko admin panela (moderator+).
+model Post {
+  id        Int      @id @default(autoincrement())
+  slug      String   @unique
+  title     String
+  category  String   @default("vesti") // radionice|projekti|konkursi|partnerstva|gostovanja|konferencije|vesti
+  excerpt   String   @default("")
+  body      String   @default("")
+  cover     String? // URL slike (opciono)
+  published Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([published, createdAt])
+}

@@ -1,14 +1,17 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api.js';
+import { useAuth } from '../auth.jsx';
 import Dashboard from './Dashboard.jsx';
 import UsersPanel from './UsersPanel.jsx';
 import CategoriesTable from './CategoriesTable.jsx';
 import CardsTable from './CardsTable.jsx';
 import BooksPanel from './BooksPanel.jsx';
+import NewsPanel from './NewsPanel.jsx';
 
 export default function Admin() {
-  const [tab, setTab] = useState('dashboard');
+  const { isAdmin } = useAuth(); // moderator (bez isAdmin) vidi samo Vesti
+  const [tab, setTab] = useState(isAdmin ? 'dashboard' : 'news');
   const [categories, setCategories] = useState([]);
   const [aiReady, setAiReady] = useState(true);
   const [aiInfo, setAiInfo] = useState(null);
@@ -20,15 +23,17 @@ export default function Admin() {
   }, []);
 
   const reloadCats = useCallback(async () => {
+    if (!isAdmin) return;
     try {
       setCategories(await api.categories(true));
     } catch (e) {
       onToast(e.message);
     }
-  }, [onToast]);
+  }, [onToast, isAdmin]);
 
   useEffect(() => {
     reloadCats();
+    if (!isAdmin) return;
     api
       .health()
       .then((h) => {
@@ -36,7 +41,7 @@ export default function Admin() {
         setAiInfo(h.ai || null);
       })
       .catch(() => {});
-  }, [reloadCats]);
+  }, [reloadCats, isAdmin]);
 
   const aiHint = aiInfo
     ? aiInfo.ready
@@ -49,32 +54,32 @@ export default function Admin() {
       <Link className="back" to="/app">
         ← Nazad na feed
       </Link>
-      <h1>Admin · Skrolopedija</h1>
-      <div className="sub">Upravljanje kategorijama, karticama i knjigama. {aiHint}</div>
+      <h1>Admin · Digitalni Zenit</h1>
+      <div className="sub">{isAdmin ? 'Upravljanje sadržajem, korisnicima i vestima.' : 'Uređivanje vesti i objava.'} {isAdmin && aiHint}</div>
 
       <div className="tabs">
-        <button className={`tab${tab === 'dashboard' ? ' on' : ''}`} onClick={() => setTab('dashboard')}>
-          📊 Pregled
-        </button>
-        <button className={`tab${tab === 'users' ? ' on' : ''}`} onClick={() => setTab('users')}>
-          👥 Korisnici
-        </button>
-        <button className={`tab${tab === 'categories' ? ' on' : ''}`} onClick={() => setTab('categories')}>
-          Kategorije
-        </button>
-        <button className={`tab${tab === 'cards' ? ' on' : ''}`} onClick={() => setTab('cards')}>
-          Kartice
-        </button>
-        <button className={`tab${tab === 'books' ? ' on' : ''}`} onClick={() => setTab('books')}>
-          Knjige
-        </button>
+        {isAdmin && (
+          <>
+            <button className={`tab${tab === 'dashboard' ? ' on' : ''}`} onClick={() => setTab('dashboard')}>📊 Pregled</button>
+            <button className={`tab${tab === 'users' ? ' on' : ''}`} onClick={() => setTab('users')}>👥 Korisnici</button>
+          </>
+        )}
+        <button className={`tab${tab === 'news' ? ' on' : ''}`} onClick={() => setTab('news')}>📰 Vesti</button>
+        {isAdmin && (
+          <>
+            <button className={`tab${tab === 'categories' ? ' on' : ''}`} onClick={() => setTab('categories')}>Kategorije</button>
+            <button className={`tab${tab === 'cards' ? ' on' : ''}`} onClick={() => setTab('cards')}>Kartice</button>
+            <button className={`tab${tab === 'books' ? ' on' : ''}`} onClick={() => setTab('books')}>Knjige</button>
+          </>
+        )}
       </div>
 
-      {tab === 'dashboard' && <Dashboard />}
-      {tab === 'users' && <UsersPanel onToast={onToast} />}
-      {tab === 'categories' && <CategoriesTable categories={categories} reload={reloadCats} onToast={onToast} aiReady={aiReady} aiHint={aiHint} />}
-      {tab === 'cards' && <CardsTable categories={categories} onToast={onToast} />}
-      {tab === 'books' && <BooksPanel onToast={onToast} aiReady={aiReady} aiHint={aiHint} />}
+      {tab === 'dashboard' && isAdmin && <Dashboard />}
+      {tab === 'users' && isAdmin && <UsersPanel onToast={onToast} />}
+      {tab === 'news' && <NewsPanel onToast={onToast} />}
+      {tab === 'categories' && isAdmin && <CategoriesTable categories={categories} reload={reloadCats} onToast={onToast} aiReady={aiReady} aiHint={aiHint} />}
+      {tab === 'cards' && isAdmin && <CardsTable categories={categories} onToast={onToast} />}
+      {tab === 'books' && isAdmin && <BooksPanel onToast={onToast} aiReady={aiReady} aiHint={aiHint} />}
 
       {toast && <div className="toast">{toast}</div>}
     </div>

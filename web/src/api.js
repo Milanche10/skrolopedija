@@ -67,6 +67,14 @@ export const api = {
   updateMe: (body) => req('/auth/me', { method: 'PATCH', body }),
   changePassword: (current, next) => req('/auth/change-password', { method: 'POST', body: { current, next } }),
 
+  // --- vesti / objave ---
+  news: (category = '') => req(`/news${category ? `?category=${encodeURIComponent(category)}` : ''}`),
+  newsAll: () => req('/news?all=1'),
+  newsOne: (slug) => req(`/news/${slug}`),
+  createNews: (body) => req('/news', { method: 'POST', body }),
+  updateNews: (id, body) => req(`/news/${id}`, { method: 'PUT', body }),
+  deleteNews: (id) => req(`/news/${id}`, { method: 'DELETE' }),
+
   // --- admin (samo admin) ---
   adminDashboard: () => req('/admin/dashboard'),
   adminUsers: () => req('/admin/users'),

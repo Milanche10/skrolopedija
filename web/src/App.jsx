@@ -377,7 +377,7 @@ export default function App() {
           <div className="topbar-row">
             <div className="brand">
               <img src="/logo-mark.svg" alt="Digitalni Zenit" className="brand-logo" />
-              Skrol<span>opedija</span>
+              <span className="brand-name">Skrol<b>opedija</b></span>
             </div>
             <div className="top-actions">
               {isAuthed ? (

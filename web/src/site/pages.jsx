@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 
 /* ---------- POČETNA ---------- */
@@ -30,6 +30,16 @@ export function Home() {
         </p>
       </Section>
 
+      {/* Brojači */}
+      <section className="dz-section tint">
+        <div className="dz-container dz-counters">
+          <Counter to={12} label="Projekata" />
+          <Counter to={5} label="Partnera" />
+          <Counter to={30} label="Radionica" />
+          <Counter to={800} label="Učesnika" suffix="+" />
+        </div>
+      </section>
+
       <Section title="Čime se bavimo" tint>
         <div className="dz-cards">
           {[
@@ -39,6 +49,23 @@ export function Home() {
             ['🔎', 'Digitalna forenzika', 'Znanja iz oblasti digitalne forenzike, očuvanja digitalnih dokaza i savremenih metoda digitalnih istraga.'],
             ['📊', 'Istraživanja', 'Istraživanja o digitalnom društvu, medijskoj pismenosti i uticaju novih tehnologija.'],
             ['🤝', 'Zajednica', 'Gradimo mrežu partnera, volontera, stručnjaka i institucija koje zajedno stvaraju bolje digitalno okruženje.'],
+          ].map(([icon, t, d]) => (
+            <article className="dz-card" key={t}>
+              <div className="dz-card-icon">{icon}</div>
+              <h3>{t}</h3>
+              <p>{d}</p>
+            </article>
+          ))}
+        </div>
+      </Section>
+
+      {/* Istaknuti projekti */}
+      <Section title="Istaknuti projekti">
+        <div className="dz-cards">
+          {[
+            ['🛡️', 'Bezbedni na mreži', 'Radionice sajber bezbednosti za učenike, nastavnike i roditelje.'],
+            ['🤖', 'AI za sve', 'Uvod u odgovornu upotrebu veštačke inteligencije u obrazovanju.'],
+            ['📱', 'Skrolpedija', 'Aplikacija za mikroučenje — uči dok skroluješ. Besplatno za sve.'],
           ].map(([icon, t, d]) => (
             <article className="dz-card" key={t}>
               <div className="dz-card-icon">{icon}</div>
@@ -62,21 +89,6 @@ export function Home() {
         </div>
       </Section>
 
-      <Section title="Zašto Digitalni Zenit?" tint>
-        <ul className="dz-checks">
-          {[
-            'Savremeni edukativni programi',
-            'Stručni tim',
-            'Međunarodna saradnja',
-            'Projekti sa društvenim uticajem',
-            'Fokus na digitalnu inkluziju',
-            'Dugoročna vizija razvoja digitalnog društva',
-          ].map((x) => (
-            <li key={x}><span className="dz-check">✔</span> {x}</li>
-          ))}
-        </ul>
-      </Section>
-
       <CtaBanner />
     </>
   );
@@ -88,6 +100,7 @@ export function About() {
     <>
       <PageHead title="O nama" subtitle="Ko smo i šta nas pokreće" />
       <Section>
+        <h2 className="dz-h2">Ko smo</h2>
         <p className="dz-lead">
           Digitalni Zenit je nezavisna neprofitna organizacija koja okuplja stručnjake, istraživače,
           studente i profesionalce sa zajedničkim ciljem — stvaranjem sigurnijeg, inkluzivnijeg i
@@ -103,18 +116,12 @@ export function About() {
       <Section tint>
         <div className="dz-two-col">
           <div className="dz-card">
-            <h3>🌅 Naša vizija</h3>
-            <p>
-              Društvo u kojem svaka osoba ima jednake mogućnosti da bezbedno koristi digitalne tehnologije,
-              razvija svoje potencijale i aktivno učestvuje u digitalnoj budućnosti.
-            </p>
+            <h3>🎯 Misija</h3>
+            <p>Kroz obrazovanje, istraživanje, inovacije i partnerstva razvijamo digitalnu pismenost, bezbednost, kritičko razmišljanje i odgovornu primenu novih tehnologija.</p>
           </div>
           <div className="dz-card">
-            <h3>🎯 Naša misija</h3>
-            <p>
-              Kroz obrazovanje, istraživanje, inovacije i partnerstva razvijamo digitalnu pismenost,
-              bezbednost, kritičko razmišljanje i odgovornu primenu novih tehnologija.
-            </p>
+            <h3>🌅 Vizija</h3>
+            <p>Društvo u kojem svaka osoba ima jednake mogućnosti da bezbedno koristi digitalne tehnologije, razvija svoje potencijale i aktivno učestvuje u digitalnoj budućnosti.</p>
           </div>
         </div>
       </Section>
@@ -126,6 +133,19 @@ export function About() {
           ))}
         </div>
       </Section>
+
+      <Section tint>
+        <div className="dz-two-col">
+          <div>
+            <h2 className="dz-h2">Istorija organizacije</h2>
+            <p>Digitalni Zenit je nastao iz ideje grupe entuzijasta okupljenih oko zajedničke vizije — da znanje o tehnologiji učine dostupnim svima. Od prvih radionica do razvoja sopstvenih digitalnih alata, rastemo zajedno sa zajednicom koju gradimo.</p>
+          </div>
+          <div>
+            <h2 className="dz-h2">Zašto postojimo</h2>
+            <p>Digitalni svet donosi ogromne mogućnosti, ali i nove rizike — dezinformacije, prevare, digitalnu nejednakost. Postojimo da bismo osnažili ljude da bezbedno, kritički i odgovorno koriste tehnologiju i da niko ne ostane po strani.</p>
+          </div>
+        </div>
+      </Section>
       <CtaBanner />
     </>
   );
@@ -134,21 +154,61 @@ export function About() {
 /* ---------- NAŠI STUBOVI ---------- */
 export function Pillars() {
   const pillars = [
-    ['🌐', 'Digitalno društvo', 'Projekti koji doprinose digitalnoj transformaciji zajednice i povećavaju dostupnost digitalnih usluga.'],
-    ['📚', 'Digitalna pismenost', 'Podižemo nivo digitalnih veština kod dece, mladih, odraslih i starijih kroz praktične edukacije.'],
-    ['🛡️', 'Sajber bezbednost', 'Pomažemo građanima i organizacijama da razviju bezbedne digitalne navike i zaštite svoje podatke.'],
-    ['🔎', 'Digitalna forenzika', 'Promovišemo razvoj digitalne forenzike kroz istraživanja, edukacije i stručne programe.'],
-    ['🤖', 'Veštačka inteligencija', 'Podržavamo odgovoran razvoj i primenu AI tehnologija u obrazovanju, javnom sektoru i privredi.'],
-    ['📰', 'Medijska i informaciona pismenost', 'Pomažemo građanima da prepoznaju dezinformacije, manipulacije i digitalne prevare.'],
-    ['💼', 'Digitalna ekonomija', 'Podržavamo razvoj digitalnog preduzetništva, novih zanimanja i ekonomije zasnovane na znanju.'],
-    ['💡', 'Istraživanje i inovacije', 'Razvijamo istraživačke projekte i testiramo nova digitalna rešenja sa društvenim uticajem.'],
+    ['🌐', 'Digitalno društvo'],
+    ['🚀', 'Digitalna budućnost'],
+    ['📚', 'Digitalna pismenost'],
+    ['📰', 'Medijska pismenost'],
+    ['🛡️', 'Sajber bezbednost'],
+    ['🤖', 'Veštačka inteligencija'],
+    ['⚖️', 'Digitalna prava i etika'],
+    ['🌍', 'Digitalna inkluzija'],
+    ['💼', 'Digitalna ekonomija i budućnost rada'],
+    ['💡', 'Istraživanje i inovacije'],
+    ['♻️', 'Održivi digitalni razvoj'],
+    ['🤝', 'Međunarodna saradnja'],
   ];
   return (
     <>
       <PageHead title="Naši stubovi" subtitle="Oblasti kroz koje delujemo" />
       <Section>
         <div className="dz-cards">
-          {pillars.map(([icon, t, d]) => (
+          {pillars.map(([icon, t]) => (
+            <article className="dz-card dz-card-mini" key={t}>
+              <div className="dz-card-icon">{icon}</div>
+              <h3>{t}</h3>
+            </article>
+          ))}
+        </div>
+      </Section>
+      <CtaBanner />
+    </>
+  );
+}
+
+/* ---------- OBLASTI RADA ---------- */
+export function Areas() {
+  const areas = [
+    ['📚', 'Digitalna pismenost', 'Osnovne i napredne digitalne veštine za sve uzraste.'],
+    ['🛡️', 'Sajber bezbednost', 'Bezbedne navike i zaštita podataka na internetu.'],
+    ['🤖', 'Veštačka inteligencija', 'Odgovorna i etička primena AI tehnologija.'],
+    ['📰', 'Medijska pismenost', 'Kritičko razumevanje medija i informacija.'],
+    ['🌐', 'Internet kultura', 'Razumevanje digitalnog društva i online zajednica.'],
+    ['🔒', 'Digitalna privatnost', 'Zaštita ličnih podataka i digitalnog identiteta.'],
+    ['🚫', 'Borba protiv dezinformacija', 'Prepoznavanje i suzbijanje lažnih vesti i manipulacija.'],
+    ['🔄', 'Digitalna transformacija', 'Podrška institucijama u digitalnom razvoju.'],
+    ['⚖️', 'Digitalna prava', 'Zaštita prava i sloboda u digitalnom okruženju.'],
+    ['🔓', 'Otvoreno znanje', 'Promocija slobodnog pristupa znanju i resursima.'],
+    ['📊', 'Istraživanje i analitika', 'Analiza digitalnih trendova i društvenog uticaja.'],
+    ['👩‍🏫', 'Edukacija nastavnika', 'Osnaživanje prosvetnih radnika za digitalno doba.'],
+    ['🧒', 'Bezbednost dece na internetu', 'Zaštita najmlađih u online svetu.'],
+    ['🏙️', 'Pametne zajednice', 'Tehnologija u službi lokalnih zajednica.'],
+  ];
+  return (
+    <>
+      <PageHead title="Oblasti rada" subtitle="Čime se konkretno bavimo" />
+      <Section>
+        <div className="dz-cards">
+          {areas.map(([icon, t, d]) => (
             <article className="dz-card" key={t}>
               <div className="dz-card-icon">{icon}</div>
               <h3>{t}</h3>
@@ -162,8 +222,43 @@ export function Pillars() {
   );
 }
 
+/* ---------- BAZA ZNANJA ---------- */
+export function KnowledgeBase() {
+  const cats = [
+    '🛡️ Sajber bezbednost', '🤖 Veštačka inteligencija', '🌐 Internet', '📚 Digitalna pismenost',
+    '📰 Medijska pismenost', '🔒 Digitalna privatnost', '⚖️ Digitalna prava', '📊 Istraživanja',
+    '📄 Publikacije', '📕 PDF dokumenti', '📘 Word dokumenti', '📗 Priručnici i vodiči',
+  ];
+  return (
+    <>
+      <PageHead title="Baza znanja" subtitle="Znanje dostupno svima" />
+      <Section center>
+        <p className="dz-lead">
+          Prikupljamo i objavljujemo obrazovne materijale, istraživanja, publikacije i praktične vodiče.
+          Za interaktivno učenje kroz kartice i kvizove — probaj našu aplikaciju.
+        </p>
+        <Link to="/app" className="dz-btn dz-btn-primary" style={{ marginTop: 16 }}>Otvori Skrolpediju →</Link>
+      </Section>
+      <Section title="Kategorije" tint>
+        <div className="dz-tags">
+          {cats.map((c) => <span className="dz-tag" key={c}>{c}</span>)}
+        </div>
+        <p className="dz-muted dz-center" style={{ marginTop: 24 }}><em>Dokumenti i materijali se dodaju uskoro.</em></p>
+      </Section>
+    </>
+  );
+}
+
 /* ---------- PARTNERI ---------- */
 export function Partners() {
+  const schools = [
+    'Prirodno-matematički fakultet u Kragujevcu',
+    'Fakultet inženjerskih nauka Univerziteta u Kragujevcu',
+    'Elektrotehnička i građevinska škola „Nikola Tesla" Jagodina',
+    'Ekonomska škola Paraćin',
+    'Gimnazija Paraćin',
+  ];
+  const future = ['Kompanije', 'Lokalne samouprave', 'Međunarodne organizacije', 'Nevladine organizacije', 'Medijski partneri'];
   return (
     <>
       <PageHead title="Partneri" subtitle="Zajedno gradimo digitalnu budućnost" />
@@ -175,27 +270,27 @@ export function Partners() {
         </p>
       </Section>
 
-      <Section title="Za koga je partnerstvo" tint>
+      <Section title="Obrazovne ustanove" tint>
         <div className="dz-cards">
-          {[
-            ['🏢', 'Za kompanije', 'Društveno odgovorni projekti, edukacije zaposlenih, zajedničke inicijative i sponzorstva.'],
-            ['🏫', 'Za škole', 'Programi digitalne pismenosti i bezbednosti za učenike, nastavnike i roditelje.'],
-            ['🏛️', 'Za organizacije', 'Zajednički projekti, istraživanja i inicijative civilnog društva.'],
-            ['🎓', 'Za fakultete', 'Istraživačka saradnja, stručna predavanja, praksa i razvoj mladih talenata.'],
-          ].map(([icon, t, d]) => (
-            <article className="dz-card" key={t}>
-              <div className="dz-card-icon">{icon}</div>
-              <h3>{t}</h3>
-              <p>{d}</p>
+          {schools.map((s) => (
+            <article className="dz-card dz-partner" key={s}>
+              <div className="dz-card-icon">🎓</div>
+              <h3>{s}</h3>
             </article>
           ))}
+        </div>
+      </Section>
+
+      <Section title="Uskoro i saradnja sa">
+        <div className="dz-values">
+          {future.map((f) => <span className="dz-pill" key={f}>{f}</span>)}
         </div>
       </Section>
 
       <Section center>
         <div className="dz-docs">
           <h3>📄 Dokumenti za partnerstvo</h3>
-          <p className="dz-muted">Ako vas zanima saradnja, ovde ćemo objaviti prezentaciju partnerstva i predloge saradnje.</p>
+          <p className="dz-muted">Ako vas zanima saradnja, ovde ćemo objaviti prezentaciju partnerstva i predloge saradnje za kompanije, škole, organizacije i fakultete.</p>
           <p className="dz-muted"><em>(Dokumenti se dodaju uskoro.)</em></p>
           <Link to="/kontakt" className="dz-btn dz-btn-primary">Postani partner</Link>
         </div>
@@ -204,7 +299,74 @@ export function Partners() {
   );
 }
 
+/* ---------- ZA ŠKOLE ---------- */
+export function ForSchools() {
+  const items = [
+    ['🛠️', 'Radionice', 'Interaktivne radionice o bezbednosti, AI i digitalnim veštinama.'],
+    ['🎤', 'Predavanja', 'Stručna predavanja za učenike, nastavnike i roditelje.'],
+    ['📁', 'Projekti', 'Zajednički obrazovni projekti sa školama.'],
+    ['👩‍🏫', 'Edukacija nastavnika', 'Obuke za prosvetne radnike u oblasti digitalnog obrazovanja.'],
+    ['🧑‍🤝‍🧑', 'Vršnjačka edukacija', 'Programi u kojima učenici uče jedni od drugih.'],
+    ['🧭', 'Savetovanje škola', 'Podrška u razvoju digitalnih politika i bezbednog okruženja.'],
+  ];
+  return (
+    <>
+      <PageHead title="Za škole" subtitle="Podrška obrazovnim ustanovama" />
+      <Section>
+        <div className="dz-cards">
+          {items.map(([icon, t, d]) => (
+            <article className="dz-card" key={t}>
+              <div className="dz-card-icon">{icon}</div>
+              <h3>{t}</h3>
+              <p>{d}</p>
+            </article>
+          ))}
+        </div>
+      </Section>
+      <CtaBanner />
+    </>
+  );
+}
+
+/* ---------- ZA KOMPANIJE ---------- */
+export function ForCompanies() {
+  const items = [
+    ['🤝', 'CSR partnerstva', 'Društveno odgovorni projekti sa merljivim uticajem.'],
+    ['💛', 'Donacije', 'Podrška realizaciji naših obrazovnih programa.'],
+    ['⭐', 'Sponzorstva', 'Podrška događajima, konferencijama i radionicama.'],
+    ['🎓', 'Edukacije zaposlenih', 'Obuke o sajber bezbednosti, AI i digitalnim veštinama.'],
+    ['🧩', 'Zajednički projekti', 'Razvoj rešenja od zajedničkog društvenog značaja.'],
+  ];
+  return (
+    <>
+      <PageHead title="Za kompanije" subtitle="Partnerstvo sa privredom" />
+      <Section>
+        <div className="dz-cards">
+          {items.map(([icon, t, d]) => (
+            <article className="dz-card" key={t}>
+              <div className="dz-card-icon">{icon}</div>
+              <h3>{t}</h3>
+              <p>{d}</p>
+            </article>
+          ))}
+        </div>
+      </Section>
+      <CtaBanner />
+    </>
+  );
+}
+
 /* ---------- TIM ---------- */
+const TEAM = [
+  ['Filip Đorđević', 'Predsednik udruženja'],
+  ['Milan Jovanović', 'Koordinator strateških operacija'],
+  ['Teodora Brkić', 'Ambasadorka i koordinatorka komunikacija'],
+  ['Đorđe Marković', 'Koordinator za podkaste i digitalne medije'],
+  ['Đorđe Jovanović', 'Koordinator za partnerstva i outreach'],
+  ['Milica Perić', 'Koordinatorka društvenih mreža'],
+];
+const initials = (name) => name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
+
 export function Team() {
   return (
     <>
@@ -213,20 +375,17 @@ export function Team() {
         <p className="dz-lead">
           Naš tim čine stručnjaci različitih profila koje povezuje zajednička vizija razvoja digitalnog
           društva. Kombinujemo znanja iz informacionih tehnologija, obrazovanja, digitalne forenzike,
-          sajber bezbednosti, komunikacija, projektnog menadžmenta i istraživanja. Verujemo da su
-          različite perspektive ključ uspešnih inovacija.
+          sajber bezbednosti, komunikacija, projektnog menadžmenta i istraživanja.
         </p>
         <div className="dz-team">
-          {[1, 2, 3, 4].map((i) => (
-            <article className="dz-team-card" key={i}>
-              <div className="dz-team-photo">👤</div>
-              <h4>Ime Prezime</h4>
-              <span className="dz-team-role">Funkcija</span>
-              <p className="dz-muted">Kratka biografija člana tima. (Ovde ide pravi sadržaj.)</p>
+          {TEAM.map(([name, role]) => (
+            <article className="dz-team-card" key={name}>
+              <div className="dz-team-photo">{initials(name)}</div>
+              <h4>{name}</h4>
+              <span className="dz-team-role">{role}</span>
             </article>
           ))}
         </div>
-        <p className="dz-muted dz-center"><em>Kartice članova tima — fotografije, funkcije i biografije — dodaju se uskoro.</em></p>
       </Section>
       <CtaBanner />
     </>
@@ -242,9 +401,7 @@ export function Contact() {
   function submit(e) {
     e.preventDefault();
     const subject = encodeURIComponent(`Kontakt sa sajta — ${f.ime} ${f.prezime}`);
-    const body = encodeURIComponent(
-      `Ime: ${f.ime} ${f.prezime}\nE-mail: ${f.email}\nOrganizacija: ${f.org}\n\nPoruka:\n${f.poruka}`
-    );
+    const body = encodeURIComponent(`Ime: ${f.ime} ${f.prezime}\nE-mail: ${f.email}\nOrganizacija: ${f.org}\n\nPoruka:\n${f.poruka}`);
     window.location.href = `mailto:digitalnizenit@gmail.com?subject=${subject}&body=${body}`;
     setSent(true);
   }
@@ -256,9 +413,13 @@ export function Contact() {
         <div className="dz-contact">
           <div className="dz-contact-info">
             <p>Imate ideju za projekat? Želite saradnju? Tražite predavače ili edukacije? Zainteresovani ste za partnerstvo?</p>
-            <p>Kontaktirajte nas i zajedno ćemo pronaći najbolje rešenje.</p>
-            <p className="dz-contact-item">✉️ <a href="mailto:digitalnizenit@gmail.com">digitalnizenit@gmail.com</a></p>
-            <p className="dz-muted">Pratite nas i na društvenim mrežama kako biste bili u toku sa našim projektima, edukacijama i događajima.</p>
+            <ul className="dz-contact-list">
+              <li>✉️ <b>Email:</b> <a href="mailto:digitalnizenit@gmail.com">digitalnizenit@gmail.com</a></li>
+              <li>📞 <b>Telefon:</b> <span className="dz-muted">uskoro</span></li>
+              <li>📍 <b>Lokacija:</b> Srbija</li>
+              <li>🔗 <b>Društvene mreže:</b> <span className="dz-muted">uskoro</span></li>
+            </ul>
+            <p className="dz-muted">Pratite nas na društvenim mrežama kako biste bili u toku sa projektima, edukacijama i događajima.</p>
           </div>
 
           <form className="dz-form" onSubmit={submit}>
@@ -280,24 +441,25 @@ export function Contact() {
 
 /* ---------- PODRŽI ---------- */
 export function Support() {
+  const ways = [
+    ['💛', 'Doniraj', 'Podrži realizaciju naših programa jednokratnom ili redovnom donacijom.'],
+    ['🤝', 'Postani partner', 'Zajedno razvijajmo projekte od društvenog značaja.'],
+    ['🙌', 'Postani volonter', 'Pridruži se timu i doprinesi svojim znanjem i vremenom.'],
+    ['💻', 'Podrži opremom', 'Doniraj opremu i resurse za radionice i edukacije.'],
+    ['🧑‍🏫', 'Postani mentor', 'Prenesi svoje znanje mladima i članovima zajednice.'],
+  ];
   return (
     <>
       <PageHead title="Podrži Digitalni Zenit" subtitle="Podržite razvoj digitalnog društva" />
       <Section>
         <p className="dz-lead">
-          Digitalni Zenit razvija projekte koji doprinose obrazovanju, digitalnoj bezbednosti,
-          istraživanjima i razvoju zajednice. Vaša podrška omogućava realizaciju radionica, istraživanja,
-          edukativnih programa, razvoja digitalnih alata i besplatnih sadržaja namenjenih građanima.
+          Vaša podrška omogućava realizaciju radionica, istraživanja, edukativnih programa, razvoja
+          digitalnih alata i besplatnih sadržaja namenjenih građanima.
         </p>
       </Section>
       <Section title="Kako možete pomoći?" tint>
         <div className="dz-cards">
-          {[
-            ['💛', 'Donacija', 'Podržite realizaciju naših programa jednokratnom ili redovnom donacijom.'],
-            ['🤝', 'Partnerstvo', 'Postanite strateški partner i zajedno razvijajmo projekte od društvenog značaja.'],
-            ['⭐', 'Sponzorstvo', 'Podržite naše događaje, konferencije i edukativne programe.'],
-            ['🙌', 'Volontiranje', 'Pridružite se našem timu i svojim znanjem doprinesite razvoju digitalnog društva.'],
-          ].map(([icon, t, d]) => (
+          {ways.map(([icon, t, d]) => (
             <article className="dz-card" key={t}>
               <div className="dz-card-icon">{icon}</div>
               <h3>{t}</h3>
@@ -313,6 +475,30 @@ export function Support() {
           <p className="dz-strong">Hvala što zajedno gradimo Digitalni Zenit.</p>
           <Link to="/kontakt" className="dz-btn dz-btn-primary">Kontaktiraj nas</Link>
         </div>
+      </Section>
+    </>
+  );
+}
+
+/* ---------- PRAVNE STRANICE (placeholderi) ---------- */
+export function Privacy() {
+  return (
+    <>
+      <PageHead title="Politika privatnosti" subtitle="Zaštita vaših podataka" />
+      <Section>
+        <p className="dz-lead">Digitalni Zenit poštuje vašu privatnost. Ova stranica će sadržati detaljnu politiku o prikupljanju, obradi i zaštiti ličnih podataka.</p>
+        <p className="dz-muted"><em>Kompletan tekst se priprema.</em></p>
+      </Section>
+    </>
+  );
+}
+export function Terms() {
+  return (
+    <>
+      <PageHead title="Uslovi korišćenja" subtitle="Pravila korišćenja" />
+      <Section>
+        <p className="dz-lead">Ova stranica će sadržati uslove korišćenja sajta i aplikacije Digitalni Zenit.</p>
+        <p className="dz-muted"><em>Kompletan tekst se priprema.</em></p>
       </Section>
     </>
   );
@@ -353,5 +539,37 @@ function CtaBanner() {
         </div>
       </div>
     </section>
+  );
+}
+
+// Animirani brojač
+function Counter({ to, label, suffix = '' }) {
+  const [n, setN] = useState(0);
+  const ref = useRef(null);
+  const started = useRef(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const io = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && !started.current) {
+        started.current = true;
+        const dur = 1200;
+        const t0 = performance.now();
+        const tick = (t) => {
+          const p = Math.min((t - t0) / dur, 1);
+          setN(Math.round((1 - Math.pow(1 - p, 3)) * to));
+          if (p < 1) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      }
+    }, { threshold: 0.4 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [to]);
+  return (
+    <div className="dz-counter" ref={ref}>
+      <div className="dz-counter-num">{n}{suffix}</div>
+      <div className="dz-counter-lbl">{label}</div>
+    </div>
   );
 }
