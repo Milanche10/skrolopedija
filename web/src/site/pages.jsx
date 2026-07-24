@@ -65,7 +65,7 @@ export function Home() {
           {[
             ['🛡️', 'Bezbedni na mreži', 'Radionice sajber bezbednosti za učenike, nastavnike i roditelje.'],
             ['🤖', 'AI za sve', 'Uvod u odgovornu upotrebu veštačke inteligencije u obrazovanju.'],
-            ['📱', 'Skrolpedija', 'Aplikacija za mikroučenje — uči dok skroluješ. Besplatno za sve.'],
+            ['📱', 'Skrolopedija', 'Aplikacija za mikroučenje — uči dok skroluješ. Besplatno za sve.'],
           ].map(([icon, t, d]) => (
             <article className="dz-card" key={t}>
               <div className="dz-card-icon">{icon}</div>
@@ -76,16 +76,16 @@ export function Home() {
         </div>
       </Section>
 
-      {/* Skrolpedija promo */}
+      {/* Skrolopedija promo */}
       <Section center>
         <div className="dz-app-promo">
           <div>
             <span className="dz-eyebrow">Naša aplikacija</span>
-            <h2>Skrolpedija — uči dok skroluješ</h2>
+            <h2>Skrolopedija — uči dok skroluješ</h2>
             <p>Mikroučenje kroz kartice i kvizove: sajber bezbednost, AI, programiranje, biznis i još mnogo toga. Besplatno za sve.</p>
             <Link to="/app" className="dz-btn dz-btn-primary">Uđi u aplikaciju →</Link>
           </div>
-          <img src="/logo-full.svg" alt="Skrolpedija" className="dz-app-promo-img" />
+          <img src="/logo-full.svg" alt="Skrolopedija" className="dz-app-promo-img" />
         </div>
       </Section>
 
@@ -237,7 +237,7 @@ export function KnowledgeBase() {
           Prikupljamo i objavljujemo obrazovne materijale, istraživanja, publikacije i praktične vodiče.
           Za interaktivno učenje kroz kartice i kvizove — probaj našu aplikaciju.
         </p>
-        <Link to="/app" className="dz-btn dz-btn-primary" style={{ marginTop: 16 }}>Otvori Skrolpediju →</Link>
+        <Link to="/app" className="dz-btn dz-btn-primary" style={{ marginTop: 16 }}>Otvori Skrolopediju →</Link>
       </Section>
       <Section title="Kategorije" tint>
         <div className="dz-tags">

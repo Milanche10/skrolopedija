@@ -77,7 +77,7 @@ export default function SiteLayout() {
           <div>
             <h4>Resursi</h4>
             <Link to="/baza-znanja">Baza znanja</Link>
-            <Link to="/app">Skrolpedija</Link>
+            <Link to="/app">Skrolopedija</Link>
             <Link to="/kontakt">Kontakt</Link>
             <Link to="/privatnost">Politika privatnosti</Link>
             <Link to="/uslovi">Uslovi korišćenja</Link>
