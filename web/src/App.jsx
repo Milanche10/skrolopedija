@@ -11,7 +11,7 @@ const LIMIT = 8;
 const randomSeed = () => Math.random().toString(36).slice(2, 8);
 
 export default function App() {
-  const { user, guest, isAuthed, isAdmin, logout } = useAuth();
+  const { user, guest, isAuthed, isAdmin, isModerator, logout } = useAuth();
   const [categories, setCategories] = useState([]);
   const [items, setItems] = useState([]);
   const [savedIds, setSavedIds] = useState(new Set());
@@ -398,7 +398,7 @@ export default function App() {
                   >
                     ☰
                   </button>
-                  {isAdmin && (
+                  {isModerator && (
                     <Link className="icon-btn" to="/admin" aria-label="Admin" style={{ textDecoration: 'none' }}>
                       ⚙️
                     </Link>
